@@ -1,0 +1,9 @@
+# Netlify veröffentlicht den Ordner "app" – kein Build nötig
+[build]
+  publish = "app"
+  command = ""
+
+[[headers]]
+  for = "/data/*"
+  [headers.values]
+    Cache-Control = "public, max-age=300"

@@ -1,0 +1,27 @@
+# Holt jede Woche die aktuellen Autobahn-Tempolimits von OpenStreetMap
+# und legt sie als app/data/de.json ab. Netlify veröffentlicht die neue Version danach automatisch.
+name: Autobahndaten aktualisieren
+on:
+  schedule:
+    - cron: '17 3 * * 1'   # montags 03:17 UTC
+  workflow_dispatch:        # zusätzlich per Knopfdruck bei GitHub startbar
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Daten bauen
+        run: node scripts/build-data.mjs
+      - name: Speichern, falls sich etwas geändert hat
+        run: |
+          git config user.name "datenbot"
+          git config user.email "datenbot@users.noreply.github.com"
+          git add app/data
+          git diff --cached --quiet || git commit -m "Autobahndaten aktualisiert"
+          git push
