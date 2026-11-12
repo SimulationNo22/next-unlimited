@@ -82,12 +82,12 @@ body { -webkit-user-select: none; user-select: none; }
 #glow0, #glow1, #glow2 { transition: opacity .7s ease; }
 .needle.off { opacity: 0; }
 .bez { font-family: 'Manrope', sans-serif; font-size: 16px; font-weight: 800; letter-spacing: .4px; transition: opacity .6s ease; }
-.bez0 { fill: #ffc56b; }
-.bez1 { fill: #f08a4b; }
-.bez2 { fill: #d0875a; }
+.bez0 { fill: #ff8a3d; }
+.bez1 { fill: #f2742c; }
+.bez2 { fill: #c95a22; }
 .dial #hubSign { transition: opacity .6s ease; }
 #hubGlow { transition: opacity 1s ease; }
-.dial.is-unl #hubGlow { opacity: .55; }
+.dial.is-unl #hubGlow { opacity: .8; }
 #ringGroup { transition: opacity .8s ease; }
 #ringGroup.off { opacity: 0; }
 .readout.swap { animation: swapIn .7s ease both; }
@@ -117,10 +117,8 @@ body { -webkit-user-select: none; user-select: none; }
 
 .unl { width: 100%; display: flex; flex-direction: column; gap: 8px; }
 .bar { position: relative; height: 12px; border-radius: 6px; background: #0b0c0d; box-shadow: inset 2px 2px 4px #040405, inset -2px -2px 4px #1d1f22; }
-.fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 6px 0 0 6px; transition: width .8s ease;
-  background: linear-gradient(90deg, #e8480f 0, #ff7a26 calc(100% - 13px), #ffd27f 100%);
-  -webkit-clip-path: polygon(0 0, calc(100% - 13px) 0, calc(100% - 1.8px) 40%, 100% 50%, calc(100% - 1.8px) 60%, calc(100% - 13px) 100%, 0 100%);
-  clip-path: polygon(0 0, calc(100% - 13px) 0, calc(100% - 1.8px) 40%, 100% 50%, calc(100% - 1.8px) 60%, calc(100% - 13px) 100%, 0 100%); }
+.fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 6px; transition: width .8s ease;
+  background: linear-gradient(90deg, #e8480f 0, #ff7a26 calc(100% - 12px), #ffb056 100%); }
 .bar-lbl { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: var(--txt2); }
 
 .warn { width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 16px; font-size: 13px; font-weight: 700; line-height: 1.3; color: #c9ccd1; }
@@ -164,3 +162,15 @@ body { -webkit-user-select: none; user-select: none; }
 .demo-end { flex-shrink: 0; white-space: nowrap; display: flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 999px; font-size: 12px; font-weight: 800; color: #1d1f23; text-decoration: none;
   background: linear-gradient(145deg, #ff8a3d, #e8480f); box-shadow: 0 0 12px rgba(255,107,31,.4); }
 .top.demo .gps { display: none; }
+
+/* Easter Egg: 5× auf das Schild tippen -> Medaille dreht sich und zeigt die 22 */
+.medal { position: absolute; left: 30.59%; top: 30.59%; width: 38.82%; height: 38.82%; perspective: 700px; opacity: 0; z-index: 2; cursor: pointer; }
+.medal.show { opacity: 1; }
+.medal-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; -webkit-transform-style: preserve-3d; transition: transform .8s cubic-bezier(.45,.05,.25,1); }
+.medal-inner.flip { transform: rotateY(180deg); }
+.medal-face { position: absolute; inset: 0; border-radius: 50%; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.medal-face.front svg { width: 100%; height: 100%; display: block; filter: drop-shadow(3px 4px 6px rgba(15,16,18,.85)); }
+.medal-face.back { transform: rotateY(180deg); display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 40% 35%, #f6f7f8, #c3c7cc); box-shadow: inset 0 0 0 1.5px #1d1f23, inset 0 0 0 4.2px #f0f1f3, inset 0 0 0 6.5px #131416, 3px 4px 10px rgba(0,0,0,.8); }
+.medal-face.back span { font: 800 calc(var(--dial) * 0.17) 'Manrope', sans-serif; color: #111214; letter-spacing: -2px; line-height: 1; }
+.dial.egg #hubSign { opacity: 0; transition: none; }

@@ -452,7 +452,7 @@
     n0.g.style.opacity = '';
   }
   // Ring + Spitze als EINE Form (Spitze so breit wie der Ring, Verlauf wie die Nadel)
-  var TIP = 13.6 / 139;
+  var TIP = 13.6 / 139, CAP = 6.5 / 139;
   function drawRing(th) {
     var cv = $('ringCanvas'), dpr = window.devicePixelRatio || 1;
     var W = Math.round(cv.clientWidth * dpr);
@@ -465,9 +465,8 @@
     ctx.clearRect(0, 0, W, W);
     ctx.beginPath();
     ctx.arc(c, c, ro, q, th + q, false);
-    ctx.lineTo(X(rm + hw * 0.18, th + TIP * 0.82), Y(rm + hw * 0.18, th + TIP * 0.82));
-    ctx.quadraticCurveTo(X(rm, th + TIP), Y(rm, th + TIP), X(rm - hw * 0.18, th + TIP * 0.82), Y(rm - hw * 0.18, th + TIP * 0.82));
-    ctx.lineTo(X(ri, th), Y(ri, th));
+    // rundes Ende (Kugel) statt Pfeilspitze
+    ctx.arc(X(rm, th), Y(rm, th), hw, th + q, th + q + Math.PI, false);
     ctx.arc(c, c, ri, th + q, q, true);
     ctx.arc(c, c - rm, hw, Math.PI / 2, Math.PI * 1.5, false);
     ctx.closePath();
@@ -476,8 +475,8 @@
       var g = ctx.createConicGradient(q, c, c), full = 2 * Math.PI;
       g.addColorStop(0, '#e8480f');
       g.addColorStop(Math.min(0.998, th / full), '#ff7a26');
-      var e = Math.min(0.9989, (th + TIP) / full);
-      g.addColorStop(e, '#ffd27f');
+      var e = Math.min(0.9989, (th + CAP) / full);
+      g.addColorStop(e, '#ffb056');
       g.addColorStop(e + 0.001, '#e8480f'); // runder Anfang oben bleibt dunkelorange
       g.addColorStop(1, '#e8480f');
       fill = g;
@@ -508,7 +507,11 @@
     var head = $('ringHead');
     var ej = easeInOut(jump);
     // in der Rille: Pfeil genau so breit wie der Ring (13 px), damit nichts übersteht
-    head.setAttribute('transform', headPose(A, easeOutBack(jump), 90 * ej, 1 - 0.58 * ej, 1 - 0.35 * ej));
+    head.setAttribute('transform', headPose(A, easeOutBack(jump), 90 * ej, 1 - 0.5 * ej, 1 - 0.5 * ej));
+    // unterwegs verwandelt sich die Nadel in eine runde Kugel (Durchmesser = Ringbreite)
+    var morph = clamp01((jump - 0.35) / 0.5);
+    $('headTri').style.opacity = 1 - morph;
+    $('headBall').style.opacity = morph;
     // gelandet: Pfeil wird zur exakten Dreiecksspitze am Ende des Rings
     head.style.opacity = landed ? 0 : '';
     if (landed) drawRing(Math.max(0.002, U.frac * 2 * Math.PI));
@@ -573,6 +576,23 @@
     };
     document.body.appendChild(s);
   }
+
+  // ---------- Easter Egg ----------
+  (function () {
+    var taps = 0, last = 0, busy = false;
+    $('medal').addEventListener('click', function () {
+      var now = Date.now();
+      taps = now - last < 900 ? taps + 1 : 1;
+      last = now;
+      if (taps < 5 || busy) return;
+      taps = 0; busy = true;
+      var dial = $('dial'), m = $('medal'), inner = $('medalInner');
+      dial.classList.add('egg'); m.classList.add('show');
+      requestAnimationFrame(function () { inner.classList.add('flip'); });
+      setTimeout(function () { inner.classList.remove('flip'); }, 800 + 3000);
+      setTimeout(function () { m.classList.remove('show'); dial.classList.remove('egg'); busy = false; }, 800 + 3000 + 850);
+    });
+  })();
 
   // ---------- Init ----------
   var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
