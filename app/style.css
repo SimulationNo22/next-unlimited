@@ -8,7 +8,7 @@
   --orange: #ff8a3d;
   /* Alles muss ohne Scrollen passen (iPhone 13 im Safari: ~664 px Höhe): das Instrument nimmt den Rest */
   --num: clamp(60px, 20vw, 80px);
-  --dial: min(380px, calc(100vw - 10px));   /* Instrument immer gleich groß */
+  --dial: min(360px, calc(100vw - 10px));   /* Instrument immer gleich groß */
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; height: 100%; background: var(--bg); color: var(--txt); font-family: 'Manrope', system-ui, -apple-system, sans-serif; overscroll-behavior: none; }
@@ -55,7 +55,11 @@ body { -webkit-user-select: none; user-select: none; }
 .needle.instant { transition: none; }
 
 /* ---------- Fahrt ---------- */
-#drive { gap: 6px; padding: calc(env(safe-area-inset-top) + 10px) 22px calc(env(safe-area-inset-bottom) + 8px); min-height: 100dvh; }
+/* oben mehr Abstand, damit nichts unter dem Statusleisten-Verlauf des iPhones liegt; Rest gleichmäßig verteilt */
+#drive { gap: 6px; justify-content: space-between; padding: max(14px, calc(env(safe-area-inset-top) + 22px)) 22px calc(env(safe-area-inset-bottom) + 6px); min-height: 100dvh; }
+.vh { visibility: hidden; opacity: 0; }
+.info { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.warn, .unl { transition: opacity .5s ease, visibility .5s; }
 .top { width: 100%; display: flex; justify-content: space-between; align-items: center; min-height: 34px; }
 .road { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; margin-right: 10px; }
 .badge { background: #1f5fae; color: #fff; font-weight: 800; font-size: 16px; padding: 5px 10px; border-radius: 7px; box-shadow: 3px 3px 8px #060607, -2px -2px 6px #212327; }
@@ -87,7 +91,7 @@ body { -webkit-user-select: none; user-select: none; }
 #ringGroup { transition: opacity .8s ease; }
 #ringGroup.off { opacity: 0; }
 .readout.swap { animation: swapIn .7s ease both; }
-.ghosts, .unl, .warn { animation: fadeUp .6s ease both; }
+
 @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 @keyframes swapIn { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: none; } }
 .dial.dim #hubSign { opacity: .55; }
@@ -123,16 +127,16 @@ body { -webkit-user-select: none; user-select: none; }
 .warn span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .warn svg { flex-shrink: 0; }
 
-.bottom { width: 100%; margin-top: auto; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; padding: 8px 10px 8px 18px; border-radius: 22px; }
+.bottom { width: 100%; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; padding: 7px 10px 7px 22px; border-radius: 26px; }
 .speed { display: flex; align-items: baseline; gap: 6px; }
-#speed { font-size: 26px; font-weight: 800; color: #dcdfe3; font-variant-numeric: tabular-nums; }
-.u, .l-lbl { font-size: 15px; font-weight: 700; color: var(--txt2); }
-.limit { display: flex; align-items: center; gap: 10px; }
-.limitsign { width: 42px; height: 42px; border-radius: 50%; background: #f2f3f5; border: 5px solid #d9342b; display: flex; align-items: center; justify-content: center;
-  font-size: 15px; font-weight: 800; color: #1d1f23; }
+#speed { font-size: 34px; font-weight: 800; color: #dcdfe3; font-variant-numeric: tabular-nums; }
+.u, .l-lbl { font-size: 17px; font-weight: 700; color: var(--txt2); }
+.limit { display: flex; align-items: center; gap: 12px; }
+.limitsign { width: 54px; height: 54px; border-radius: 50%; background: #f2f3f5; border: 7px solid #d9342b; display: flex; align-items: center; justify-content: center;
+  font-size: 19px; font-weight: 800; color: #1d1f23; }
 .limitsign.none-known { background: #24262a; border-color: #34373c; color: var(--txt2); }
 .limitsign.unl { background: none; border: 0; }
-.limitsign.unl svg { width: 42px; height: 42px; }
+.limitsign.unl svg { width: 54px; height: 54px; }
 
 @media (max-height: 800px) {
   #start { gap: 16px; padding-top: calc(env(safe-area-inset-top) + 60px); padding-bottom: calc(env(safe-area-inset-bottom) + 14px); }

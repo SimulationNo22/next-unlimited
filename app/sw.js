@@ -1,5 +1,5 @@
 // Offline-Fähigkeit: App-Dateien zwischenspeichern (Netz zuerst, sonst Cache)
-var CACHE = 'nus-v17';
+var CACHE = 'nus-v18';
 var FILES = ['./', 'index.html', 'style.css', 'engine.js', 'app.js', 'demo-data.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 self.addEventListener('install', function (e) {

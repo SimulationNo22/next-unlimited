@@ -341,7 +341,7 @@
     var unlBox = $('unlBox'), warn = $('warn');
     var hideAll = function () {
       for (var i = 0; i < 3; i++) setNeedle(i, false);
-      unlBox.classList.add('hidden'); warn.classList.add('hidden');
+      unlBox.classList.add('vh'); warn.classList.add('vh');
       $('ringGroup').classList.add('off');
       dial.classList.remove('is-unl');
       if (U.active) leaveUnl();
@@ -391,10 +391,10 @@
       $('bigNum').textContent = fmtKm(res.unlRemaining);
       $('bigLabel').textContent = t('unlimited');
       $('bigLabel').className = 'label hot';
-      unlBox.classList.remove('hidden');
+      unlBox.classList.remove('vh');
       var p = total > 0 ? (res.unlDriven / total) * 100 : 0;
       $('unlFill').style.width = 'calc(' + p.toFixed(1) + '% + 7px)';
-      warn.classList.toggle('hidden', !res.unlCond);
+      warn.classList.toggle('vh', !res.unlCond);
       $('warnText').textContent = t('warn');
       return;
     }
@@ -402,7 +402,7 @@
     // ---- Normale Fahrt ----
     dial.classList.remove('is-unl');
     $('ringGroup').classList.add('off');
-    unlBox.classList.add('hidden');
+    unlBox.classList.add('vh');
     if (U.active) leaveUnl();
     if (res.main) {
       setNeedle(0, true, E.angDiff(H, res.main.brg), fmtKm(res.main.dist) + ' km');
@@ -423,7 +423,7 @@
     // Kreuz-Hinweis steht in der Kopfzeile statt der Himmelsrichtung
     if (gh.length && res.kreuz) $('dirText').textContent = fmtKm(res.kreuz.dist) + ' km · ' + (res.kreuz.name || t('kreuz'));
     var showWarn = !!(res.main && res.main.cond);
-    warn.classList.toggle('hidden', !showWarn);
+    warn.classList.toggle('vh', !showWarn);
     $('warnText').textContent = t('warn');
   }
 
