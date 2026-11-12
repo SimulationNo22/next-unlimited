@@ -580,17 +580,48 @@
   // ---------- Easter Egg ----------
   (function () {
     var taps = 0, last = 0, busy = false;
+    var inner = $('medalInner');
+    // Rand der Medaille: gestapelte Scheiben ergeben beim Drehen eine sichtbare Kante
+    for (var k = 0; k < 12; k++) {
+      var r = document.createElement('div');
+      r.className = 'medal-rim';
+      r.style.transform = 'translateZ(' + (-3.6 + k * 0.65).toFixed(2) + 'px) scale(0.93)';
+      inner.insertBefore(r, inner.firstChild);
+    }
+    var front = inner.querySelector('.front'), back = inner.querySelector('.back');
+    function pose(angle, lift) {
+      inner.style.transform = 'translateZ(' + (lift * 46).toFixed(1) + 'px) rotateX(' + (lift * 12).toFixed(1) + 'deg) rotateY(' + angle.toFixed(1) + 'deg)';
+      var c = Math.cos(angle * Math.PI / 180);
+      var sh = ' drop-shadow(3px 4px 6px rgba(15,16,18,.85))';
+      front.style.filter = 'brightness(' + (0.55 + 0.45 * Math.max(0, c)).toFixed(3) + ')' + sh;
+      back.style.filter = 'brightness(' + (0.55 + 0.45 * Math.max(0, -c)).toFixed(3) + ')' + sh;
+    }
+    function turn(from, to, dur, done) {
+      var t0 = performance.now();
+      (function step(now) {
+        var p = Math.min(1, (now - t0) / dur);
+        var e = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+        pose(from + (to - from) * e, Math.sin(Math.PI * p));
+        if (p < 1) requestAnimationFrame(step); else done();
+      })(t0);
+    }
     $('medal').addEventListener('click', function () {
       var now = Date.now();
       taps = now - last < 900 ? taps + 1 : 1;
       last = now;
       if (taps < 5 || busy) return;
       taps = 0; busy = true;
-      var dial = $('dial'), m = $('medal'), inner = $('medalInner');
+      var dial = $('dial'), m = $('medal');
+      pose(0, 0);
       dial.classList.add('egg'); m.classList.add('show');
-      requestAnimationFrame(function () { inner.classList.add('flip'); });
-      setTimeout(function () { inner.classList.remove('flip'); }, 800 + 3000);
-      setTimeout(function () { m.classList.remove('show'); dial.classList.remove('egg'); busy = false; }, 800 + 3000 + 850);
+      turn(0, 180, 1100, function () {
+        setTimeout(function () {
+          turn(180, 360, 1100, function () {
+            pose(0, 0);
+            m.classList.remove('show'); dial.classList.remove('egg'); busy = false;
+          });
+        }, 3000);
+      });
     });
   })();
 

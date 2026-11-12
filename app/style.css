@@ -87,7 +87,7 @@ body { -webkit-user-select: none; user-select: none; }
 .bez2 { fill: #c95a22; }
 .dial #hubSign { transition: opacity .6s ease; }
 #hubGlow { transition: opacity 1s ease; }
-.dial.is-unl #hubGlow { opacity: .8; }
+.dial.is-unl #hubGlow { opacity: .68; }
 #ringGroup { transition: opacity .8s ease; }
 #ringGroup.off { opacity: 0; }
 .readout.swap { animation: swapIn .7s ease both; }
@@ -163,14 +163,14 @@ body { -webkit-user-select: none; user-select: none; }
   background: linear-gradient(145deg, #ff8a3d, #e8480f); box-shadow: 0 0 12px rgba(255,107,31,.4); }
 .top.demo .gps { display: none; }
 
-/* Easter Egg: 5× auf das Schild tippen -> Medaille dreht sich und zeigt die 22 */
-.medal { position: absolute; left: 30.59%; top: 30.59%; width: 38.82%; height: 38.82%; perspective: 700px; opacity: 0; z-index: 2; cursor: pointer; }
+/* Easter Egg: 5× auf das Schild tippen -> Medaille dreht sich (3D, mit Rand) und zeigt die 22 */
+.medal { position: absolute; left: 30.59%; top: 30.59%; width: 38.82%; height: 38.82%; perspective: 520px; opacity: 0; z-index: 2; cursor: pointer; }
 .medal.show { opacity: 1; }
-.medal-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; -webkit-transform-style: preserve-3d; transition: transform .8s cubic-bezier(.45,.05,.25,1); }
-.medal-inner.flip { transform: rotateY(180deg); }
-.medal-face { position: absolute; inset: 0; border-radius: 50%; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
-.medal-face.front svg { width: 100%; height: 100%; display: block; filter: drop-shadow(3px 4px 6px rgba(15,16,18,.85)); }
-.medal-face.back { transform: rotateY(180deg); display: flex; align-items: center; justify-content: center;
-  background: radial-gradient(circle at 40% 35%, #f6f7f8, #c3c7cc); box-shadow: inset 0 0 0 1.5px #1d1f23, inset 0 0 0 4.2px #f0f1f3, inset 0 0 0 6.5px #131416, 3px 4px 10px rgba(0,0,0,.8); }
-.medal-face.back span { font: 800 calc(var(--dial) * 0.17) 'Manrope', sans-serif; color: #111214; letter-spacing: -2px; line-height: 1; }
+.medal-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; -webkit-transform-style: preserve-3d; }
+.medal-face, .medal-rim { position: absolute; inset: 0; border-radius: 50%; }
+.medal-face { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.medal-face svg { width: 100%; height: 100%; display: block; }
+.medal-face.front { transform: translateZ(4px); }
+.medal-face.back { transform: rotateY(180deg) translateZ(4px); }
+.medal-rim { background: radial-gradient(circle at 35% 30%, #c9cdd2, #7d8288 70%, #4a4e53); }
 .dial.egg #hubSign { opacity: 0; transition: none; }
