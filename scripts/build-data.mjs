@@ -5,12 +5,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const OUT_DIR = process.env.OUT_DIR || 'app/data';
-const ENDPOINTS = (process.env.OVERPASS || 'https://overpass-api.de/api/interpreter,https://overpass.private.coffee/api/interpreter').split(',');
+const ENDPOINTS = (process.env.OVERPASS || 'https://overpass-api.de/api/interpreter,https://overpass.private.coffee/api/interpreter,https://overpass.kumi.systems/api/interpreter').split(',');
 const UA = 'NextUnlimited-DataBuild/1.0 (weekly build of German motorway speed limits; contact via GitHub)';
 const KEEP = ['highway', 'ref', 'oneway', 'maxspeed', 'maxspeed:forward', 'maxspeed:backward', 'maxspeed:conditional',
   'maxspeed:forward:conditional', 'maxspeed:backward:conditional', 'maxspeed:variable', 'destination', 'destination:ref'];
 const BBOX = { s: 47.2, w: 5.8, n: 55.1, e: 15.1 };      // Deutschland (mit etwas Rand)
-const STEP_LAT = 1.4, STEP_LON = 2.35;                     // ~24 Kacheln
+const STEP_LAT = 0.8, STEP_LON = 1.2;                      // ~80 kleinere Kacheln (weniger Zeitüberschreitungen)
 const TOL_M = 5;                                           // Vereinfachung: max. 5 m Abweichung
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -20,16 +20,35 @@ function query(bb) {
     '.w out body qt;node(w.w)->.n;.n out skel qt;node.n["highway"="motorway_junction"];out tags qt;';
 }
 
-async function fetchTile(bb, fetchImpl) {
+// Kachel laden; scheitert sie mehrfach, wird sie in 4 kleinere Kacheln geteilt
+async function fetchTileRobust(bb, fetchImpl, depth = 0) {
+  try {
+    return await fetchTile(bb, fetchImpl, depth === 0 ? 4 : 5);
+  } catch (e) {
+    if (depth >= 2) throw e;
+    const [s, w, n, ea] = bb.split(',').map(Number);
+    const ms = (s + n) / 2, mw = (w + ea) / 2;
+    console.log(`  Teile Kachel ${bb} in 4 kleinere`);
+    const parts = [[s, w, ms, mw], [s, mw, ms, ea], [ms, w, n, mw], [ms, mw, n, ea]].map((a) => a.map((x) => x.toFixed(3)).join(','));
+    const merged = { elements: [] };
+    for (const p of parts) {
+      const j = await fetchTileRobust(p, fetchImpl, depth + 1);
+      merged.elements.push(...j.elements);
+    }
+    return merged;
+  }
+}
+
+async function fetchTile(bb, fetchImpl, tries = 4) {
   let lastErr;
-  for (let attempt = 0; attempt < 4; attempt++) {
+  for (let attempt = 0; attempt < tries; attempt++) {
     const url = ENDPOINTS[attempt % ENDPOINTS.length];
     try {
       const r = await fetchImpl(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': UA, 'Accept': '*/*' },
         body: 'data=' + encodeURIComponent(query(bb)),
-        signal: AbortSignal.timeout(300000)
+        signal: AbortSignal.timeout(200000)
       });
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const j = await r.json();
@@ -37,8 +56,9 @@ async function fetchTile(bb, fetchImpl) {
       return j;
     } catch (e) {
       lastErr = e;
-      console.log(`  Kachel ${bb}: Versuch ${attempt + 1} fehlgeschlagen (${e.message}) – warte 60 s`);
-      await sleep(60000);
+      const wait = fetchImpl === fetch ? 30000 + attempt * 30000 : 0;
+      console.log(`  Kachel ${bb}: Versuch ${attempt + 1} fehlgeschlagen (${e.message}) – warte ${wait / 1000} s`);
+      await sleep(wait);
     }
   }
   throw new Error('Kachel ' + bb + ' fehlgeschlagen: ' + lastErr.message);
@@ -83,7 +103,7 @@ export async function build(fetchImpl = fetch, tiles = null) {
   }
   for (let i = 0; i < tiles.length; i++) {
     const t0 = Date.now();
-    const j = await fetchTile(tiles[i], fetchImpl);
+    const j = await fetchTileRobust(tiles[i], fetchImpl);
     for (const el of j.elements) {
       if (el.type === 'node') {
         if (el.lat !== undefined) nodes.set(el.id, [el.lat, el.lon]);
@@ -95,7 +115,7 @@ export async function build(fetchImpl = fetch, tiles = null) {
       }
     }
     console.log(`Kachel ${i + 1}/${tiles.length} ${tiles[i]}: ${j.elements.length} Elemente, ${((Date.now() - t0) / 1000).toFixed(0)} s`);
-    if (i < tiles.length - 1 && fetchImpl === fetch) await sleep(10000); // Server schonen
+    if (i < tiles.length - 1 && fetchImpl === fetch) await sleep(5000); // Server schonen
   }
 
   // Knoten-Indizes, Knoten die mehrfach vorkommen (Verknüpfungen) bleiben immer erhalten
