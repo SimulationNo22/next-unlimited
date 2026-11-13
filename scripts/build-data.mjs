@@ -166,13 +166,15 @@ export function writeOut(data, stats) {
   const prevPath = path.join(OUT_DIR, 'version.json');
   if (fs.existsSync(prevPath)) {
     const prev = JSON.parse(fs.readFileSync(prevPath, 'utf8'));
-    if (prev.ways && stats.ways < prev.ways * 0.8) {
+    const source = process.env.DATA_SOURCE || 'overpass';
+    // Schutz vor unvollständigen Läufen – nur sinnvoll, wenn der alte Stand aus derselben Quelle kommt
+    if (prev.ways && (prev.source || 'overpass') === source && stats.ways < prev.ways * 0.8) {
       throw new Error(`Nur ${stats.ways} statt ~${prev.ways} Abschnitte – unvollständig, alter Stand bleibt.`);
     }
   }
   const json = JSON.stringify(data);
   fs.writeFileSync(path.join(OUT_DIR, 'de.json'), json);
-  fs.writeFileSync(prevPath, JSON.stringify({ version: data.version, ways: stats.ways, nodes: stats.nodes, bytes: json.length }, null, 1));
+  fs.writeFileSync(prevPath, JSON.stringify({ version: data.version, source: process.env.DATA_SOURCE || 'overpass', ways: stats.ways, nodes: stats.nodes, bytes: json.length }, null, 1));
   console.log('Fertig:', stats, (json.length / 1e6).toFixed(1) + ' MB');
 }
 

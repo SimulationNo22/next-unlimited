@@ -33,6 +33,7 @@ jobs:
       - name: Daten bauen
         env:
           OUT_DIR: ${{ inputs.test == true && 'test-out' || 'app/data' }}
+          DATA_SOURCE: geofabrik
         run: node scripts/build-data-pbf.mjs mw.opl
       - name: Mit bisherigem Datensatz vergleichen
         if: ${{ inputs.test == true }}
