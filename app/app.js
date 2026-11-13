@@ -756,6 +756,7 @@
   }
 
   // ---------- Demo-Fahrt (Testdaten, kein GPS) ----------
+  var DemoCtl = { jump: function () {} };
   function startDemo() {
     var s = document.createElement('script');
     s.src = 'demo-data.js';
@@ -765,31 +766,40 @@
       useCompact(comp);
       var g = S.graph;
       // Kurze Schleife: kurz vor dem Kreuz starten, nach dem Unbegrenzt-Abschnitt von vorn
-      var START = 49.565, END = 49.035, SPEEDUP = TUT ? 20 : 30;
+      var START = 49.565, END = 49.035, SPEEDUP = 30;
       function reset() { var sn = g.snap(START, 11.0002, 180, 10, null); e = sn.edge; along = 0; }
       var e, along; reset();
       var last = Date.now();
       var demoDate = new Date(); demoDate.setHours(14, 0, 0, 0);
-      function step() {
-        var now = Date.now(), dt = Math.min(0.5, (now - last) / 1000); last = now;
-        if (TUT && Tut.paused) return;
-        var kmh = g.isUnl(e) ? 230 : (g.lim[e] > 0 ? g.lim[e] - 2 : 128);
-        along += (kmh / 3.6) * dt * SPEEDUP;
+      function kmhOf() { return g.isUnl(e) ? 230 : (g.lim[e] > 0 ? g.lim[e] - 2 : 128); }
+      function moveBy(m) {
+        along += m;
         while (along > g.len[e]) {
           along -= g.len[e];
           var nx = g.next(e);
-          if (nx < 0) { reset(); break; }
+          if (nx < 0) { reset(); return; }
           e = nx;
         }
+      }
+      function emit() {
         var f = along / g.len[e];
         var a = g.from[e], b = g.to[e];
         var la = g.lat[a] + (g.lat[b] - g.lat[a]) * f;
-        if (la < END) { reset(); return; }
+        if (la < END) { reset(); return emit(); }
         S.pos = { lat: la, lon: g.lon[a] + (g.lon[b] - g.lon[a]) * f, acc: 8, date: demoDate };
-        S.heading = g.brg[e]; S.headingAt = now; S.speed = kmh / 3.6;
+        S.heading = g.brg[e]; S.headingAt = Date.now(); S.speed = kmhOf() / 3.6;
         update();
-        if (TUT) Tut.check();
       }
+      function step() {
+        var now = Date.now(), dt = Math.min(0.5, (now - last) / 1000); last = now;
+        if (TUT) return;                       // im Tutorial steht die Fahrt, bis „Weiter“ gedrückt wird
+        moveBy((kmhOf() / 3.6) * dt * SPEEDUP);
+        emit();
+      }
+      // Tutorial: sofort zur nächsten passenden Stelle der Strecke springen
+      DemoCtl.jump = function (pred) {
+        for (var n = 0; n < 4000 && !pred(S.res); n++) { moveBy(100); emit(); }
+      };
       setInterval(step, 250);
       step();
       if (TUT) Tut.start();
@@ -805,10 +815,10 @@
       { sel: '#dial', round: true, until: function (r) { return r && r.main && !r.inUnl; } },
       { sel: '.readout', until: function (r) { return r && r.main && !r.inUnl; } },
       { sel: '.top .road', until: function (r) { return r && r.main && !r.inUnl; } },
-      { sel: '#dial', round: true, until: function (r) { return r && !r.inUnl && r.ghosts && r.ghosts.length > 0; }, settle: 1600 },
+      { sel: '#dial', round: true, until: function (r) { return r && !r.inUnl && r.ghosts && r.ghosts.length > 0; }, settle: 1300 },
       { sel: '#warn', until: function (r) { return r && !r.inUnl; } },
       { sel: '.bottom', until: function (r) { return r && !r.inUnl; } },
-      { sel: '#dial', round: true, until: function (r) { return r && r.inUnl && U.frac > 0.12; }, settle: 0 },
+      { sel: '#dial', round: true, until: function (r) { return r && r.inUnl && r.unlDriven > 0.3 * (r.unlDriven + r.unlRemaining); }, settle: 2600 },
       { sel: '.readout', until: function (r) { return r && r.inUnl; } },
       { sel: null, until: function () { return true; } }
     ];
@@ -857,25 +867,15 @@
     function next() {
       if (waiting) return;
       if (i === STEPS.length - 1) { setTimeout(function () { location.href = './'; }, 120); return; }
-      i++; waiting = true; readyAt = 0;
-      ov.classList.add('wait');           // Overlay hellt auf, die Fahrt läuft weiter bis zum passenden Moment
-      Tut.paused = false;
-      check();
-    }
-    function check() {
-      if (!waiting) return;
+      i++; waiting = true;
+      ov.classList.add('wait');           // Karte blendet aus, die Anzeige springt sofort zur passenden Stelle
       var st = STEPS[i];
-      if (!st.until(S.res)) { readyAt = 0; return; }
-      var settle = st.settle == null ? 0 : st.settle;
-      if (!readyAt) readyAt = Date.now() + settle;
-      if (Date.now() < readyAt) return;
-      waiting = false; Tut.paused = true;
-      setTimeout(show, 350);              // kurz warten, bis die Nadeln zur Ruhe kommen
+      setTimeout(function () {
+        DemoCtl.jump(st.until);
+        setTimeout(function () { waiting = false; show(); }, st.settle == null ? 700 : st.settle);
+      }, 250);
     }
-    return {
-      paused: false, check: check,
-      start: function () { build(); next(); }
-    };
+    return { start: function () { build(); next(); } };
   })();
 
   // ---------- Easter Egg ----------
