@@ -1,9 +1,12 @@
-# Alternative Datenquelle: kompletter Deutschland-Extrakt von Geofabrik (unabhängig von Overpass-Servern)
+# Autobahndaten aus dem Geofabrik-Deutschland-Extrakt (unabhängig von Overpass-Servern)
 name: Autobahndaten aktualisieren (Geofabrik)
 on:
-  schedule:
-    - cron: '17 3 * * 1'   # montags 03:17 UTC
   workflow_dispatch:
+    inputs:
+      test:
+        description: 'Nur testen (Ergebnis als Download, nichts speichern)'
+        type: boolean
+        default: false
 permissions:
   contents: write
 jobs:
@@ -16,17 +19,27 @@ jobs:
         with:
           node-version: 22
       - name: osmium installieren
-        run: sudo apt-get update && sudo apt-get install -y osmium-tool
+        run: sudo apt-get update -q && sudo apt-get install -y -q osmium-tool
       - name: Deutschland-Extrakt laden (~4,5 GB)
-        run: curl -fsSL -o de.osm.pbf https://download.geofabrik.de/europe/germany-latest.osm.pbf
+        run: curl -fsSL --retry 3 -o de.osm.pbf https://download.geofabrik.de/europe/germany-latest.osm.pbf && ls -lh de.osm.pbf
       - name: Autobahnen herausfiltern
         run: |
           osmium tags-filter de.osm.pbf w/highway=motorway,motorway_link -o mw.osm.pbf
           osmium cat mw.osm.pbf -f opl,add_metadata=false -o mw.opl
           rm de.osm.pbf
+          ls -lh mw.osm.pbf mw.opl
       - name: Daten bauen
+        env:
+          OUT_DIR: ${{ inputs.test && 'test-out' || 'app/data' }}
         run: node scripts/build-data-pbf.mjs mw.opl
+      - name: Testergebnis bereitstellen
+        if: ${{ inputs.test }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: geofabrik-test
+          path: test-out/
       - name: Speichern, falls sich etwas geändert hat
+        if: ${{ !inputs.test }}
         run: |
           git config user.name "datenbot"
           git config user.email "datenbot@users.noreply.github.com"
