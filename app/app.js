@@ -279,7 +279,8 @@
   var needles = [0, 1, 2].map(function (i) {
     return { g: $('nd' + i), glow: $('glow' + i), lbl: $('lbl' + i), cur: 0, target: 0, on: false, init: false,
       glowOp: [0.45, 0.28, 0.14][i],
-      refl: REFLECT ? $('refl' + i) : null, reflGrad: REFLECT ? $('rg' + i) : null, reflOp: [1, 0.6, 0.32][i] };
+      refl: REFLECT ? $('refl' + i) : null, reflGrad: REFLECT ? $('rg' + i) : null, reflOp: [0.7, 0.42, 0.22][i],
+      floor: REFLECT ? $('floor' + i) : null, floorOp: [0.2, 0.12, 0.06][i] };
   });
 
   function update() {
@@ -310,6 +311,7 @@
     n.lbl.parentNode.style.opacity = show ? 1 : 0;
     n.glow.style.opacity = show ? n.glowOp : 0;
     if (n.refl) n.refl.style.opacity = show ? n.reflOp : 0;
+    if (n.floor) n.floor.style.opacity = show ? n.floorOp : 0;
   }
 
   function setStatus(msg) {
@@ -379,7 +381,6 @@
       // ---- Unbegrenzt aktiv ----
       for (var k = 0; k < 3; k++) setNeedle(k, false, 0, '', true);
       dial.classList.add('is-unl');
-      $('ringGroup').classList.remove('off');
       var total = res.unlRemaining + res.unlDriven;
       var frac = total > 0 ? res.unlDriven / total : 0;
       U.fracTarget = frac;
@@ -459,7 +460,8 @@
     if (!W) return;
     if (cv.width !== W) { cv.width = W; cv.height = W; }
     var ctx = cv.getContext('2d'), k = W / 340, c = 170 * k;
-    var ro = 145.5 * k, ri = 132.5 * k, rm = 139 * k, hw = 6.5 * k, q = -Math.PI / 2;
+    // Licht unter der lichtdurchlässigen Lünette: etwas breiter und weich, darüber eine milchige Schicht
+    var ro = 146.5 * k, ri = 131.5 * k, rm = 139 * k, hw = 7.5 * k, q = -Math.PI / 2;
     function X(r, a) { return c + r * Math.sin(a); }
     function Y(r, a) { return c - r * Math.cos(a); }
     ctx.clearRect(0, 0, W, W);
@@ -481,10 +483,24 @@
       g.addColorStop(1, '#e8480f');
       fill = g;
     }
-    ctx.shadowColor = 'rgba(255,107,31,0.8)';
-    ctx.shadowBlur = 14 * k * dpr / dpr;
+    ctx.save();
+    if ('filter' in ctx) ctx.filter = 'blur(' + (2.6 * k).toFixed(1) + 'px)';
+    ctx.shadowColor = 'rgba(255,107,31,0.65)';
+    ctx.shadowBlur = 16 * k;
+    ctx.globalAlpha = 0.9;
     ctx.fillStyle = fill;
     ctx.fill();
+    ctx.restore();
+    // milchige Oberfläche der Lünette über dem Licht (nur dort, wo Licht ist)
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-atop';
+    var fr = ctx.createRadialGradient(c - 40 * k, c - 50 * k, 20 * k, c, c, 152 * k);
+    fr.addColorStop(0, 'rgba(255,240,225,0.10)');
+    fr.addColorStop(0.85, 'rgba(19,20,22,0.22)');
+    fr.addColorStop(1, 'rgba(10,10,11,0.35)');
+    ctx.fillStyle = fr;
+    ctx.fillRect(0, 0, W, W);
+    ctx.restore();
   }
   function headPose(A, u, spin, kx, ky) {
     return 'rotate(' + A.toFixed(2) + ' 170 170) translate(0 ' + (-73.7 * u).toFixed(2) + ') translate(170 104.7) rotate(' +
@@ -493,8 +509,6 @@
   function tickUnl(now) {
     var t = (now - U.t0) / 1000;
     // Rille öffnet sich von oben symmetrisch nach beiden Seiten
-    var gp = easeOut(clamp01(t / 0.9));
-    symDash($('groove'), C, gp); symDash($('grooveHi'), 920.4, gp); symDash($('grooveLo'), 826.2, gp);
     // 1) Nadel dreht nach oben  2) springt in die Rille und kippt in Fahrtrichtung
     var rot = easeInOut(clamp01(t / 0.35));
     var jump = clamp01((t - 0.3) / 0.55);
@@ -529,6 +543,7 @@
         var tr = 'rotate(' + a.toFixed(2) + ' 170 170)';
         n.g.setAttribute('transform', tr);
         n.glow.setAttribute('transform', tr);
+        if (n.floor) n.floor.setAttribute('transform', tr);
         if (n.reflGrad) {
           var ra = a * Math.PI / 180;
           n.reflGrad.setAttribute('cx', (170 + 123 * Math.sin(ra)).toFixed(1));
@@ -633,7 +648,7 @@
   // ---------- Init ----------
   var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   if (isIOS && !isStandalone()) $('iosHint').classList.remove('hidden');
-  if (!REFLECT) $('reflect').style.display = 'none';
+  if (!REFLECT) { $('reflect').style.display = 'none'; ['floor0', 'floor1', 'floor2'].forEach(function (id) { $(id).style.display = 'none'; }); }
   if (DEMO) { $('demoLink').classList.add('hidden'); $('demoEnd').classList.remove('hidden'); document.querySelector('.top').classList.add('demo'); }
   idbGet('de').then(function (c) {
     if (c) { hasCache = true; S.dataVersion = c.version; updateDataState(); }
