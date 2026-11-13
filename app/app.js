@@ -307,6 +307,8 @@
       n.lbl.textContent = text;
     }
     n.g.classList.toggle('off', !show);
+    if (was && !show) { n.g.classList.remove('cooling'); void n.g.getBoundingClientRect(); n.g.classList.add('cooling'); }
+    if (show) n.g.classList.remove('cooling');
     n.lbl.parentNode.style.opacity = show ? 1 : 0;
     n.glow.style.opacity = show ? n.glowOp : 0;
     if (n.refl) n.refl.style.opacity = show ? n.reflOp : 0;
@@ -385,7 +387,7 @@
       U.fracTarget = frac;
       if (modeChanged) {
         // Nadel bleibt stehen und dimmt aus; danach beginnen die Skalenstriche zu glühen
-        U.active = true; U.t0 = performance.now(); U.frac = 0;
+        U.active = true; U.t0 = performance.now(); U.frac = 0; lastTicks = -1;
       }
       $('bigPre').textContent = t('still');
       $('bigNum').textContent = fmtKm(res.unlRemaining);
@@ -499,7 +501,10 @@
       spin.toFixed(2) + ') scale(' + kx.toFixed(3) + ' ' + ky.toFixed(3) + ') translate(-170 -104.7)';
   }
   // Skalenstriche als Fortschritt: 72 Striche (alle 5°), die nacheinander zu glühen beginnen
+  var lastTicks = -1;
   function drawTicks(f) {
+    if (Math.abs(f - lastTicks) < 0.0004) return;
+    lastTicks = f;
     var cv = $('ringCanvas'), dpr = window.devicePixelRatio || 1;
     var W = Math.round(cv.clientWidth * dpr);
     if (!W) return;
@@ -507,20 +512,25 @@
     var ctx = cv.getContext('2d'), k = W / 340, c = 170 * k;
     ctx.clearRect(0, 0, W, W);
     var lit = Math.max(1, f * 72), full = Math.floor(lit);
-    // Licht der glühenden Striche fällt auf Boden und Innenwand der Hohlkehle
+    // Licht der glühenden Striche fällt auf Boden und Innenwand der Hohlkehle.
+    // Ohne ctx.filter (Safari kann das nicht): viele weiche radiale Lichtflecken entlang der leuchtenden Striche
     var q = -Math.PI / 2, th = lit * 5 * Math.PI / 180;
     ctx.save();
-    if ('filter' in ctx) ctx.filter = 'blur(' + (13 * k).toFixed(1) + 'px)';
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = 'rgba(255,107,31,0.10)';
-    ctx.lineWidth = 52 * k;
-    ctx.beginPath(); ctx.arc(c, c, 100 * k, q, q + th, false); ctx.stroke();
-    ctx.strokeStyle = 'rgba(255,107,31,0.12)';
-    ctx.lineWidth = 26 * k;
-    ctx.beginPath(); ctx.arc(c, c, 112 * k, q, q + th, false); ctx.stroke();
-    if ('filter' in ctx) ctx.filter = 'blur(' + (2 * k).toFixed(1) + 'px)';
-    ctx.strokeStyle = 'rgba(255,150,70,0.38)';
-    ctx.lineWidth = 2.5 * k;
+    for (var s2 = 0; s2 < lit; s2 += 1) {
+      var aa = (s2 * 5 + 0.39) * Math.PI / 180, fade = Math.min(1, lit - s2);
+      var gx = c + 108 * k * Math.sin(aa), gy = c - 108 * k * Math.cos(aa);
+      var rg = ctx.createRadialGradient(gx, gy, 0, gx, gy, 34 * k);
+      rg.addColorStop(0, 'rgba(255,107,31,' + (0.09 * fade).toFixed(3) + ')');
+      rg.addColorStop(0.5, 'rgba(255,107,31,' + (0.03 * fade).toFixed(3) + ')');
+      rg.addColorStop(1, 'rgba(255,107,31,0)');
+      ctx.fillStyle = rg;
+      ctx.fillRect(gx - 34 * k, gy - 34 * k, 68 * k, 68 * k);
+    }
+    // Innenkante zur Lünette fängt etwas Licht
+    ctx.strokeStyle = 'rgba(255,150,70,0.28)';
+    ctx.lineWidth = 1.6 * k;
+    ctx.shadowColor = 'rgba(255,107,31,0.6)';
+    ctx.shadowBlur = 6 * k;
     ctx.beginPath(); ctx.arc(c, c, 127 * k, q, q + th, false); ctx.stroke();
     ctx.restore();
     ctx.lineCap = 'round';

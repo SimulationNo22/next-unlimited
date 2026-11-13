@@ -77,7 +77,10 @@ body { -webkit-user-select: none; user-select: none; }
 .d-hub { position: absolute; left: 31.76%; top: 31.76%; width: 36.47%; height: 36.47%; border-radius: 50%;
   background: linear-gradient(145deg, #1d1f22, #101113); box-shadow: 8px 8px 18px #060607, -6px -6px 14px #212327; }
 .d-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.needle .lit { transition: opacity 1.4s ease; }
+.needle .lit { transition: opacity 1.1s ease-in; }
+.needle .ember { opacity: 0; }
+.needle.cooling .ember { animation: cool 2.6s ease-out both; }   /* Glühdraht kühlt nach: dunkelrot, dann aus */
+@keyframes cool { 0% { opacity: 0; } 25% { opacity: .85; } 100% { opacity: 0; } }
 #glow0, #glow1, #glow2 { transition: opacity 1.4s ease; }
 .needle.off .lit { opacity: 0; }   /* Nadel bleibt stehen, das Licht geht aus wie bei einer Glühbirne */
 .bez { font-family: 'Manrope', sans-serif; font-size: 16px; font-weight: 800; letter-spacing: .4px; transition: opacity .6s ease; }
