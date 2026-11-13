@@ -201,11 +201,14 @@ body { -webkit-user-select: none; user-select: none; }
 .tut-spot { position: fixed; border-radius: 22px; box-shadow: 0 0 0 200vmax rgba(6,7,8,.78), 0 0 0 2px rgba(255,138,61,.55), 0 0 24px rgba(255,107,31,.35);
   transition: left .45s cubic-bezier(.3,.7,.2,1), top .45s cubic-bezier(.3,.7,.2,1), width .45s cubic-bezier(.3,.7,.2,1), height .45s cubic-bezier(.3,.7,.2,1), border-radius .45s ease, box-shadow .4s ease; pointer-events: none; }
 .tut-spot.none { box-shadow: 0 0 0 200vmax rgba(6,7,8,.78); }
-.tut.wait .tut-spot { box-shadow: 0 0 0 200vmax rgba(6,7,8,.15); }
 .tut-card { position: fixed; left: 16px; right: 16px; max-width: 420px; margin: 0 auto; padding: 18px 20px 16px; border-radius: 24px;
   background: linear-gradient(160deg, #1d1f23, #141518); box-shadow: 10px 10px 24px #050506, -6px -6px 16px #202227;
-  transition: opacity .3s ease, transform .3s ease; }
-.tut.wait .tut-card { opacity: 0; transform: translateY(8px); pointer-events: none; }
+  transition: top .45s cubic-bezier(.3,.7,.2,1), height .3s ease; }
+/* beim Wechsel bleibt alles stehen: nur der Inhalt der Karte blendet kurz über, Spotlight und Karte gleiten zur neuen Stelle */
+.tut-card > * { transition: opacity .2s ease; }
+.tut.wait .tut-card > * { opacity: 0; }
+.tut.wait .tut-card { pointer-events: none; }
+.tut.pre .tut-card { opacity: 0; }
 .tut-k { font-size: 11px; font-weight: 800; letter-spacing: 2px; color: var(--orange, #ff6b1f); }
 .tut-h { margin: 6px 0 6px; font-size: 20px; font-weight: 800; color: #f2f3f5; }
 .tut-p { margin: 0; font-size: 15px; line-height: 1.5; color: #c4c8ce; }

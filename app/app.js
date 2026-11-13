@@ -824,7 +824,7 @@
     ];
     var i = -1, waiting = false, readyAt = 0, ov, spot, card;
     function build() {
-      ov = document.createElement('div'); ov.className = 'tut'; ov.innerHTML =
+      ov = document.createElement('div'); ov.className = 'tut pre wait'; ov.innerHTML =
         '<div class="tut-spot"></div><div class="tut-card raised"><div class="tut-k"></div><h3 class="tut-h"></h3><p class="tut-p"></p>' +
         '<div class="tut-row"><button type="button" class="tut-skip"></button><button type="button" class="tut-next"></button></div></div>';
       document.body.appendChild(ov);
@@ -843,14 +843,14 @@
         spot.style.width = (r.width + 2 * pad) + 'px'; spot.style.height = (r.height + 2 * pad) + 'px';
         spot.style.borderRadius = st.round ? '50%' : '22px';
         spot.classList.remove('none');
-        // Karte auf die Seite, auf der mehr Platz ist
-        var below = vh - r.bottom > r.top;
-        card.style.top = below ? Math.min(vh - card.offsetHeight - 16, r.bottom + pad + 14) + 'px' : '';
-        card.style.bottom = below ? '' : Math.max(16, vh - r.top + pad + 14) + 'px';
+        // Karte auf die Seite, auf der mehr Platz ist (immer über „top“, damit sie gleitet statt springt)
+        var below = vh - r.bottom > r.top, ch = card.offsetHeight;
+        card.style.top = (below ? Math.min(vh - ch - 16, r.bottom + pad + 14) : Math.max(16, r.top - pad - 14 - ch)) + 'px';
       } else {
         spot.classList.add('none');
-        spot.style.left = '50%'; spot.style.top = '45%'; spot.style.width = '0px'; spot.style.height = '0px';
-        card.style.top = ''; card.style.bottom = Math.round(vh * 0.36) + 'px';
+        var cx = window.innerWidth / 2, cy = vh * 0.4;
+        spot.style.left = cx + 'px'; spot.style.top = cy + 'px'; spot.style.width = '0px'; spot.style.height = '0px';
+        card.style.top = Math.round(vh * 0.64 - card.offsetHeight) + 'px';
       }
     }
     function show() {
@@ -861,8 +861,9 @@
       ov.querySelector('.tut-next').textContent = i === STEPS.length - 1 ? t('done') : t('next');
       ov.querySelector('.tut-skip').textContent = t('skip');
       ov.querySelector('.tut-skip').style.visibility = i === STEPS.length - 1 ? 'hidden' : '';
-      ov.classList.remove('wait');
       place();
+      if (ov.classList.contains('pre')) { card.style.transition = 'none'; void card.offsetHeight; card.style.transition = ''; ov.classList.remove('pre'); }
+      ov.classList.remove('wait');
     }
     function next() {
       if (waiting) return;
