@@ -327,7 +327,6 @@
   }
   pressable($('go'), 'pressed');
   pressable($('lang'), 'pressed');
-  pressable($('medal'), 'sign-pressed', $('dial'));
   // Demo beenden: kurz warten, damit der Klick hörbar ist und das Eindrücken sichtbar wird
   pressable($('demoEnd'), 'pressed');
   $('demoEnd').addEventListener('click', function (e) {
@@ -769,32 +768,13 @@
   }
 
   // ---------- Easter Egg ----------
+  // 5× aufs Schild tippen: unter dem Schild flackert eine kleine orange 22 auf wie eine Kontrollleuchte
   (function () {
-    var taps = 0, last = 0, busy = false;
-    var inner = $('medalInner');
-    // Rand der Medaille: gestapelte Scheiben ergeben beim Drehen eine sichtbare Kante
-    for (var k = 0; k < 12; k++) {
-      var r = document.createElement('div');
-      r.className = 'medal-rim';
-      r.style.transform = 'translateZ(' + (-3.6 + k * 0.65).toFixed(2) + 'px) scale(0.93)';
-      inner.insertBefore(r, inner.firstChild);
-    }
-    var front = inner.querySelector('.front'), back = inner.querySelector('.back');
-    function pose(angle, lift) {
-      inner.style.transform = 'translateZ(' + (lift * 46).toFixed(1) + 'px) rotateX(' + (lift * 12).toFixed(1) + 'deg) rotateY(' + angle.toFixed(1) + 'deg)';
-      var c = Math.cos(angle * Math.PI / 180);
-      var sh = ' drop-shadow(3px 4px 6px rgba(15,16,18,.85))';
-      front.style.filter = 'brightness(' + (0.55 + 0.45 * Math.max(0, c)).toFixed(3) + ')' + sh;
-      back.style.filter = 'brightness(' + (0.55 + 0.45 * Math.max(0, -c)).toFixed(3) + ')' + sh;
-    }
-    function turn(from, to, dur, done) {
-      var t0 = performance.now();
-      (function step(now) {
-        var p = Math.min(1, (now - t0) / dur);
-        var e = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
-        pose(from + (to - from) * e, Math.sin(Math.PI * p));
-        if (p < 1) requestAnimationFrame(step); else done();
-      })(t0);
+    var taps = 0, last = 0, busy = false, lamp = $('egg22');
+    function set(v) { lamp.style.opacity = v; }
+    function flicker(seq, done) {
+      var i = 0;
+      (function f() { set(seq[i][0]); var d = seq[i][1]; i++; if (i < seq.length) setTimeout(f, d); else if (done) setTimeout(done, d); })();
     }
     $('medal').addEventListener('click', function () {
       var now = Date.now();
@@ -802,16 +782,14 @@
       last = now;
       if (taps < 5 || busy) return;
       taps = 0; busy = true;
-      var dial = $('dial'), m = $('medal');
-      pose(0, 0);
-      dial.classList.add('egg'); m.classList.add('show');
-      turn(0, 180, 1100, function () {
-        setTimeout(function () {
-          turn(180, 360, 1100, function () {
-            pose(0, 0);
-            m.classList.remove('show'); dial.classList.remove('egg'); busy = false;
-          });
-        }, 3000);
+      // Glühlämpchen: zögerndes Angehen, 3 s an mit leichtem Unruhe-Flimmern, dann flackernd aus
+      flicker([[0.5, 60], [0.05, 80], [0.8, 50], [0.3, 70], [1, 0]], function () {
+        var t0 = performance.now();
+        (function hold(now) {
+          var p = now - t0;
+          if (p < 3000) { set((0.9 + 0.1 * Math.sin(p / 37) * Math.sin(p / 91)).toFixed(3)); requestAnimationFrame(hold); }
+          else flicker([[0.35, 70], [0.85, 50], [0.1, 90], [0.4, 60], [0, 0]], function () { busy = false; });
+        })(t0);
       });
     });
   })();

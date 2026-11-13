@@ -59,11 +59,6 @@ body { -webkit-user-select: none; user-select: none; }
   box-shadow: inset 4px 4px 10px rgba(110,30,0,.55), inset -3px -3px 8px rgba(255,190,140,.35), 2px 2px 5px #060607, -2px -2px 5px #1b1d20, 0 0 14px rgba(255,107,31,.2); }
 .demo-end.pressed { transform: scale(.96) translateY(.5px); filter: brightness(.9);
   box-shadow: inset 2px 2px 5px rgba(110,30,0,.6), inset -2px -2px 4px rgba(255,190,140,.35), 0 0 6px rgba(255,107,31,.2); }
-/* Schild in der Mitte: lässt sich eindrücken, wölbt sich nach innen */
-#hubPress { transform-box: fill-box; transform-origin: center; transition: transform .1s ease; }
-#signPress { opacity: 0; transition: opacity .1s ease; pointer-events: none; }
-.dial.sign-pressed #hubPress { transform: scale(.965); }
-.dial.sign-pressed #signPress { opacity: 1; }
 .ioshint { margin: 0; padding: 10px 14px; border-radius: 14px; font-size: 12px; font-weight: 600; line-height: 1.45; color: #ffb347; text-align: center; background: rgba(255,138,61,.08); }
 .demolink { font-size: 13px; font-weight: 600; color: var(--txt2); text-decoration: underline; text-underline-offset: 3px; padding: 4px 8px; }
 
@@ -188,17 +183,8 @@ body { -webkit-user-select: none; user-select: none; }
   background: linear-gradient(145deg, #ff8a3d, #e8480f); box-shadow: 0 0 12px rgba(255,107,31,.4); }
 .top.demo .gps { display: none; }
 
-/* Easter Egg: 5× auf das Schild tippen -> Medaille dreht sich (3D, mit Rand) und zeigt die 22 */
-.medal { position: absolute; left: 30.59%; top: 30.59%; width: 38.82%; height: 38.82%; perspective: 520px; opacity: 0; z-index: 2; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-.medal.show { opacity: 1; }
-.medal-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; -webkit-transform-style: preserve-3d; }
-.medal-face, .medal-rim { position: absolute; inset: 0; border-radius: 50%; }
-.medal-face { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
-.medal-face svg { width: 100%; height: 100%; display: block; }
-.medal-face.front { transform: translateZ(4px); }
-.medal-face.back { transform: rotateY(180deg) translateZ(4px); }
-.medal-rim { background: radial-gradient(circle at 35% 30%, #c9cdd2, #7d8288 70%, #4a4e53); }
-.dial.egg #hubSign { opacity: 0; transition: none; }
+/* Easter Egg: 5× auf das Schild tippen -> kleine 22 leuchtet darunter auf wie eine Kontrollleuchte */
+.medal { position: absolute; left: 30.59%; top: 30.59%; width: 38.82%; height: 38.82%; border-radius: 50%; z-index: 2; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 
 /* Lichtreflexe in der Hohlkehle */
 .refl { opacity: 0; transition: opacity 1.4s ease; }
