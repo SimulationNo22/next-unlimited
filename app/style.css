@@ -86,7 +86,7 @@ body { -webkit-user-select: none; user-select: none; }
 .bez2 { fill: #c95a22; }
 .dial #hubSign { transition: opacity .6s ease; }
 #hubGlow { transition: opacity 1s ease; }
-.dial.is-unl #hubGlow { opacity: .68; }
+.dial.is-unl #hubGlow { opacity: 0; }   /* kein Glow mehr unter dem Schild */
 #ringGroup { transition: opacity .8s ease; }
 #ringGroup.off { opacity: 0; }
 .readout.swap { animation: swapIn .7s ease both; }
@@ -178,5 +178,5 @@ body { -webkit-user-select: none; user-select: none; }
 .refl { opacity: 0; transition: opacity 1.4s ease; }
 .refl-hub { opacity: 0; transition: opacity 1.2s ease; }
 .dial.is-unl .refl-hub { opacity: .4; }
-.dial.ticks.is-unl .refl-hub { opacity: .12; }
+.dial.ticks.is-unl .refl-hub { opacity: 0; }
 .floor { transition: opacity 1.4s ease; }

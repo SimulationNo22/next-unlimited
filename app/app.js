@@ -507,6 +507,19 @@
     var ctx = cv.getContext('2d'), k = W / 340, c = 170 * k;
     ctx.clearRect(0, 0, W, W);
     var lit = Math.max(1, f * 72), full = Math.floor(lit);
+    // Licht der glühenden Striche fällt auf Boden und Innenwand der Hohlkehle
+    var q = -Math.PI / 2, th = lit * 5 * Math.PI / 180;
+    ctx.save();
+    if ('filter' in ctx) ctx.filter = 'blur(' + (7 * k).toFixed(1) + 'px)';
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(255,107,31,0.17)';
+    ctx.lineWidth = 30 * k;
+    ctx.beginPath(); ctx.arc(c, c, 112 * k, q, q + th, false); ctx.stroke();
+    if ('filter' in ctx) ctx.filter = 'blur(' + (2 * k).toFixed(1) + 'px)';
+    ctx.strokeStyle = 'rgba(255,150,70,0.38)';
+    ctx.lineWidth = 2.5 * k;
+    ctx.beginPath(); ctx.arc(c, c, 127 * k, q, q + th, false); ctx.stroke();
+    ctx.restore();
     ctx.lineCap = 'round';
     for (var i = 0; i <= full && i < 72; i++) {
       var alpha = i < full ? 1 : lit - full;
