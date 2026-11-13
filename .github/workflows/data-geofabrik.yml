@@ -32,6 +32,9 @@ jobs:
         env:
           OUT_DIR: ${{ inputs.test && 'test-out' || 'app/data' }}
         run: node scripts/build-data-pbf.mjs mw.opl
+      - name: Mit bisherigem Datensatz vergleichen
+        if: ${{ inputs.test }}
+        run: node scripts/compare-data.mjs app/data/de.json test-out/de.json
       - name: Testergebnis bereitstellen
         if: ${{ inputs.test }}
         uses: actions/upload-artifact@v4
