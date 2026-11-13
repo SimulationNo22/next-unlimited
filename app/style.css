@@ -179,4 +179,5 @@ body { -webkit-user-select: none; user-select: none; }
 .refl { opacity: 0; transition: opacity .7s ease; }
 .refl-hub { opacity: 0; transition: opacity 1.2s ease; }
 .dial.is-unl .refl-hub { opacity: .4; }
+.dial.ticks.is-unl .refl-hub { opacity: .12; }
 .floor { transition: opacity .7s ease; }

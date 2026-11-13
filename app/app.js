@@ -132,6 +132,9 @@
   var DEMO = /[?&]demo/.test(location.search);
   // Lichtreflexe in Skala/Innenwand; Fallback: ?reflect=0 in der Adresse oder hier auf false setzen
   var REFLECT = !/[?&]reflect=0/.test(location.search);
+  // Designstudie Unbegrenzt-Fortschritt: 'ticks' = Skalenstriche glühen nacheinander (Standard),
+  // 'bezel' = Licht unter der Lünette (?ring=bezel)
+  var RINGMODE = /[?&]ring=bezel/.test(location.search) ? 'bezel' : 'ticks';
   var S = {
     graph: null, region: null, loading: false, dataError: false,
     pos: null, heading: null, headingAt: 0, speed: null, gpsError: null,
@@ -506,6 +509,33 @@
     return 'rotate(' + A.toFixed(2) + ' 170 170) translate(0 ' + (-73.7 * u).toFixed(2) + ') translate(170 104.7) rotate(' +
       spin.toFixed(2) + ') scale(' + kx.toFixed(3) + ' ' + ky.toFixed(3) + ') translate(-170 -104.7)';
   }
+  // Skalenstriche als Fortschritt: 72 Striche (alle 5°), die nacheinander zu glühen beginnen
+  function drawTicks(f) {
+    var cv = $('ringCanvas'), dpr = window.devicePixelRatio || 1;
+    var W = Math.round(cv.clientWidth * dpr);
+    if (!W) return;
+    if (cv.width !== W) { cv.width = W; cv.height = W; }
+    var ctx = cv.getContext('2d'), k = W / 340, c = 170 * k;
+    ctx.clearRect(0, 0, W, W);
+    var lit = Math.max(1, f * 72), full = Math.floor(lit);
+    ctx.lineCap = 'round';
+    for (var i = 0; i <= full && i < 72; i++) {
+      var alpha = i < full ? 1 : lit - full;
+      if (alpha <= 0.01) continue;
+      var a = (i * 5 + 0.39) * Math.PI / 180, s = Math.sin(a), co = Math.cos(a);
+      var head = i >= full - 1;
+      var tt = full > 1 ? i / (full - 1) : 1;
+      var col = head ? '255,176,86' : (Math.round(232 + 23 * tt) + ',' + Math.round(72 + 50 * tt) + ',' + Math.round(15 + 23 * tt));
+      ctx.strokeStyle = 'rgba(' + col + ',' + alpha.toFixed(3) + ')';
+      ctx.shadowColor = 'rgba(255,107,31,' + (0.9 * alpha).toFixed(3) + ')';
+      ctx.shadowBlur = (head ? 12 : 7) * k;
+      ctx.lineWidth = (head ? 2.8 : 2.2) * k;
+      ctx.beginPath();
+      ctx.moveTo(c + 113.6 * k * s, c - 113.6 * k * co);
+      ctx.lineTo(c + 122.4 * k * s, c - 122.4 * k * co);
+      ctx.stroke();
+    }
+  }
   function tickUnl(now) {
     var t = (now - U.t0) / 1000;
     // Rille öffnet sich von oben symmetrisch nach beiden Seiten
@@ -521,14 +551,15 @@
     var head = $('ringHead');
     var ej = easeInOut(jump);
     // in der Rille: Pfeil genau so breit wie der Ring (13 px), damit nichts übersteht
-    head.setAttribute('transform', headPose(A, easeOutBack(jump), 90 * ej, 1 - 0.5 * ej, 1 - 0.5 * ej));
+    if (RINGMODE === 'ticks') head.setAttribute('transform', headPose(A, easeOutBack(jump) * (52.7 / 73.7), 0, 1 - 0.65 * ej, 1 - 0.65 * ej));
+    else head.setAttribute('transform', headPose(A, easeOutBack(jump), 90 * ej, 1 - 0.5 * ej, 1 - 0.5 * ej));
     // unterwegs verwandelt sich die Nadel in eine runde Kugel (Durchmesser = Ringbreite)
     var morph = clamp01((jump - 0.35) / 0.5);
     $('headTri').style.opacity = 1 - morph;
     $('headBall').style.opacity = morph;
     // gelandet: Pfeil wird zur exakten Dreiecksspitze am Ende des Rings
     head.style.opacity = landed ? 0 : '';
-    if (landed) drawRing(Math.max(0.002, U.frac * 2 * Math.PI));
+    if (landed) { if (RINGMODE === 'ticks') drawTicks(U.frac); else drawRing(Math.max(0.002, U.frac * 2 * Math.PI)); }
     $('ringConicWrap').style.opacity = landed ? 1 : 0;
   }
 
@@ -648,6 +679,7 @@
   // ---------- Init ----------
   var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   if (isIOS && !isStandalone()) $('iosHint').classList.remove('hidden');
+  if (RINGMODE === 'ticks') $('dial').classList.add('ticks');
   if (!REFLECT) { $('reflect').style.display = 'none'; ['floor0', 'floor1', 'floor2'].forEach(function (id) { $(id).style.display = 'none'; }); }
   if (DEMO) { $('demoLink').classList.add('hidden'); $('demoEnd').classList.remove('hidden'); document.querySelector('.top').classList.add('demo'); }
   idbGet('de').then(function (c) {
