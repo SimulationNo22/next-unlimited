@@ -500,62 +500,97 @@
     return 'rotate(' + A.toFixed(2) + ' 170 170) translate(0 ' + (-73.7 * u).toFixed(2) + ') translate(170 104.7) rotate(' +
       spin.toFixed(2) + ') scale(' + kx.toFixed(3) + ' ' + ky.toFixed(3) + ') translate(-170 -104.7)';
   }
-  // Skalenstriche als Fortschritt: 72 Striche (alle 5°), die nacheinander zu glühen beginnen
-  var lastTicks = -1;
+  // Skalenstriche als Fortschritt: 72 Striche (alle 5°), die nacheinander zu glühen beginnen.
+  // Alles Licht (Striche mit Schein, Bodenlicht, Reflexion an der Innenkante) wird EINMAL vorgerendert;
+  // pro Bild werden nur Ausschnitte davon kopiert – kein Neuberechnen von Schatten/Verläufen, daher kein Flackern.
+  var lastTicks = -1, tickCache = null;
+  function buildTickCache(W) {
+    var k = W / 340, c = 170 * k;
+    function mk() { var x = document.createElement('canvas'); x.width = W; x.height = W; return x; }
+    var G = mk(), T = mk(), H = mk();
+    // Licht: Boden der Hohlkehle + gebrochene Innenkante zur Lünette (wie die Nadel-Reflexion), nichts auf der Lünette selbst
+    var g = G.getContext('2d');
+    g.save();
+    g.beginPath(); g.arc(c, c, 128 * k, 0, 2 * Math.PI); g.clip();
+    for (var s2 = 0; s2 < 72; s2++) {
+      var aa = (s2 * 5 + 0.39) * Math.PI / 180;
+      var gx = c + 110 * k * Math.sin(aa), gy = c - 110 * k * Math.cos(aa);
+      var rg = g.createRadialGradient(gx, gy, 0, gx, gy, 30 * k);
+      rg.addColorStop(0, 'rgba(255,107,31,0.075)');
+      rg.addColorStop(0.5, 'rgba(255,107,31,0.025)');
+      rg.addColorStop(1, 'rgba(255,107,31,0)');
+      g.fillStyle = rg; g.fillRect(gx - 30 * k, gy - 30 * k, 60 * k, 60 * k);
+    }
+    // weicher Lichtsaum vor der Wand (wie die Streu-Reflexion der Nadeln), radial auslaufend
+    for (var r = 116; r <= 126; r += 1) {
+      var d = (r - 123) / 3.2;
+      g.strokeStyle = 'rgba(255,130,50,' + (0.05 * Math.exp(-d * d)).toFixed(4) + ')';
+      g.lineWidth = 1.1 * k; g.beginPath(); g.arc(c, c, r * k, 0, 2 * Math.PI); g.stroke();
+    }
+    // dünne helle Linie auf der gebrochenen Kante
+    g.strokeStyle = 'rgba(255,176,112,0.42)'; g.lineWidth = 1.6 * k;
+    g.beginPath(); g.arc(c, c, 127 * k, 0, 2 * Math.PI); g.stroke();
+    g.restore();
+    // Striche (normal) und Striche in Frontfarbe (heller, für die vordersten)
+    function strokes(ctx, hot) {
+      ctx.lineCap = 'round';
+      for (var i = 0; i < 72; i++) {
+        var a = (i * 5 + 0.39) * Math.PI / 180, sn = Math.sin(a), co = Math.cos(a), tt = i / 71;
+        ctx.strokeStyle = hot ? 'rgb(255,176,86)' : 'rgb(' + Math.round(232 + 23 * tt) + ',' + Math.round(72 + 50 * tt) + ',' + Math.round(15 + 23 * tt) + ')';
+        ctx.shadowColor = 'rgba(255,107,31,0.9)';
+        ctx.shadowBlur = (hot ? 11 : 7) * k;
+        ctx.lineWidth = (hot ? 2.7 : 2.2) * k;
+        ctx.beginPath();
+        ctx.moveTo(c + 113.6 * k * sn, c - 113.6 * k * co);
+        ctx.lineTo(c + 122.4 * k * sn, c - 122.4 * k * co);
+        ctx.stroke();
+      }
+    }
+    strokes(T.getContext('2d'), false);
+    strokes(H.getContext('2d'), true);
+    return { W: W, k: k, c: c, G: G, T: T, H: H };
+  }
+  function wedge(ctx, C, img, a0, a1, alpha) {
+    if (a1 <= a0 || alpha <= 0.003) return;
+    var q = -Math.PI / 2, R = C.W;
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, alpha);
+    ctx.beginPath(); ctx.moveTo(C.c, C.c);
+    ctx.arc(C.c, C.c, R, q + a0 * Math.PI / 180, q + a1 * Math.PI / 180, false);
+    ctx.closePath(); ctx.clip();
+    ctx.drawImage(img, 0, 0);
+    ctx.restore();
+  }
   function drawTicks(f) {
-    // nur in festen Achtel-Strich-Stufen neu zeichnen – verhindert ständiges Neuzeichnen und Flimmern auf dem iPhone
-    f = Math.round(f * 576) / 576;
-    if (f === lastTicks) return;
+    if (Math.abs(f - lastTicks) < 0.00005) return;
     lastTicks = f;
     var cv = $('ringCanvas'), dpr = window.devicePixelRatio || 1;
     var W = Math.round(cv.clientWidth * dpr);
     if (!W) return;
     if (cv.width !== W) { cv.width = W; cv.height = W; }
-    var ctx = cv.getContext('2d'), k = W / 340, c = 170 * k;
+    if (!tickCache || tickCache.W !== W) tickCache = buildTickCache(W);
+    var C = tickCache, ctx = cv.getContext('2d');
     ctx.clearRect(0, 0, W, W);
-    var lit = Math.max(1, f * 72), full = Math.floor(lit);
-    // Licht der glühenden Striche fällt auf Boden und Innenwand der Hohlkehle.
-    // Ohne ctx.filter (Safari kann das nicht): viele weiche radiale Lichtflecken entlang der leuchtenden Striche
-    var q = -Math.PI / 2, th = lit * 5 * Math.PI / 180;
-    ctx.save();
-    for (var s2 = 0; s2 < lit; s2 += 1) {
-      var aa = (s2 * 5 + 0.39) * Math.PI / 180, fade = Math.min(1, lit - s2);
-      var gx = c + 108 * k * Math.sin(aa), gy = c - 108 * k * Math.cos(aa);
-      var rg = ctx.createRadialGradient(gx, gy, 0, gx, gy, 34 * k);
-      rg.addColorStop(0, 'rgba(255,107,31,' + (0.09 * fade).toFixed(3) + ')');
-      rg.addColorStop(0.5, 'rgba(255,107,31,' + (0.03 * fade).toFixed(3) + ')');
-      rg.addColorStop(1, 'rgba(255,107,31,0)');
-      ctx.fillStyle = rg;
-      ctx.fillRect(gx - 34 * k, gy - 34 * k, 68 * k, 68 * k);
+    var lit = Math.min(72, Math.max(1, f * 72)), full = Math.floor(lit), part = lit - full;
+    var end = lit * 5 - 2.1; // Winkel der Lichtfront
+    // Licht: gleitet stufenlos mit, läuft an beiden Enden über ~20° bzw. ~10° sanft aus
+    if (lit >= 72) wedge(ctx, C, C.G, -180, 180, 1);
+    else {
+      var FD = 20, N = 10;
+      wedge(ctx, C, C.G, 0, end - FD, 1);
+      for (var n = 0; n < N; n++) {
+        var b0 = end - FD + n * FD / N, b1 = b0 + FD / N;
+        wedge(ctx, C, C.G, Math.max(0, b0), b1, 1 - (n + 0.5) / N);
+      }
+      for (var m = 0; m < 5; m++) wedge(ctx, C, C.G, -(m + 1) * 2, -m * 2, 1 - (m + 0.5) / 5);
     }
-    // Innenkante zur Lünette fängt etwas Licht – als weich auslaufende Flecken, damit es keine harten Enden gibt
-    for (var w2 = 0; w2 < lit; w2 += 1) {
-      var aw = (w2 * 5 + 0.39) * Math.PI / 180, fw = Math.min(1, lit - w2);
-      var wx = c + 127 * k * Math.sin(aw), wy = c - 127 * k * Math.cos(aw);
-      var wg = ctx.createRadialGradient(wx, wy, 0, wx, wy, 13 * k);
-      wg.addColorStop(0, 'rgba(255,150,70,' + (0.16 * fw).toFixed(3) + ')');
-      wg.addColorStop(1, 'rgba(255,150,70,0)');
-      ctx.fillStyle = wg;
-      ctx.fillRect(wx - 13 * k, wy - 13 * k, 26 * k, 26 * k);
-    }
-    ctx.restore();
-    ctx.lineCap = 'round';
-    for (var i = 0; i <= full && i < 72; i++) {
-      var alpha = i < full ? 1 : lit - full;
-      if (alpha <= 0.01) continue;
-      var a = (i * 5 + 0.39) * Math.PI / 180, s = Math.sin(a), co = Math.cos(a);
-      // Nähe zur Front (0 = weit dahinter, 1 = vorderster Strich) – fließend, kein Springen
-      var hot = Math.max(0, 1 - (lit - i - 0.5) / 3);
-      var tt = Math.min(1, i / Math.max(1, lit - 1));
-      var r = Math.round(232 + 23 * Math.max(tt, hot)), gC = Math.round(72 + 50 * tt + 54 * hot), bC = Math.round(15 + 23 * tt + 48 * hot);
-      ctx.strokeStyle = 'rgba(' + r + ',' + Math.min(176, gC) + ',' + Math.min(86, bC) + ',' + alpha.toFixed(3) + ')';
-      ctx.shadowColor = 'rgba(255,107,31,' + (0.9 * alpha).toFixed(3) + ')';
-      ctx.shadowBlur = (7 + 4 * hot) * k;
-      ctx.lineWidth = (2.2 + 0.5 * hot) * k;
-      ctx.beginPath();
-      ctx.moveTo(c + 113.6 * k * s, c - 113.6 * k * co);
-      ctx.lineTo(c + 122.4 * k * s, c - 122.4 * k * co);
-      ctx.stroke();
+    // Striche: alle vollen, dazu der gerade angehende anteilig
+    wedge(ctx, C, C.T, -2.1, full * 5 - 2.1, 1);
+    if (full < 72) wedge(ctx, C, C.T, full * 5 - 2.1, full * 5 + 2.9, part);
+    // vorderste Striche heller (fließend)
+    for (var j = Math.max(0, full - 3); j <= full && j < 72; j++) {
+      var hot = Math.max(0, 1 - (lit - j - 0.5) / 3) * (j === full ? part : 1);
+      wedge(ctx, C, C.H, j * 5 - 2.1, j * 5 + 2.9, hot);
     }
   }
   function tickUnl(now) {
