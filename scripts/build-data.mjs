@@ -7,7 +7,7 @@ import path from 'node:path';
 const OUT_DIR = process.env.OUT_DIR || 'app/data';
 const ENDPOINTS = (process.env.OVERPASS || 'https://overpass-api.de/api/interpreter,https://overpass.private.coffee/api/interpreter,https://overpass.kumi.systems/api/interpreter').split(',');
 const UA = 'NextUnlimited-DataBuild/1.0 (weekly build of German motorway speed limits; contact via GitHub)';
-const KEEP = ['highway', 'ref', 'oneway', 'maxspeed', 'maxspeed:forward', 'maxspeed:backward', 'maxspeed:conditional',
+export const KEEP = ['highway', 'ref', 'oneway', 'maxspeed', 'maxspeed:forward', 'maxspeed:backward', 'maxspeed:conditional',
   'maxspeed:forward:conditional', 'maxspeed:backward:conditional', 'maxspeed:variable', 'destination', 'destination:ref'];
 const BBOX = { s: 47.2, w: 5.8, n: 55.1, e: 15.1 };      // Deutschland (mit etwas Rand)
 const STEP_LAT = 0.8, STEP_LON = 1.2;                      // ~80 kleinere Kacheln (weniger Zeitüberschreitungen)
@@ -118,6 +118,11 @@ export async function build(fetchImpl = fetch, tiles = null) {
     if (i < tiles.length - 1 && fetchImpl === fetch) await sleep(5000); // Server schonen
   }
 
+  return compact(nodes, ways, names);
+}
+
+// Aus Rohdaten (Knoten, Wege, Kreuznamen) den kompakten, vereinfachten Datensatz bauen
+export function compact(nodes, ways, names) {
   // Knoten-Indizes, Knoten die mehrfach vorkommen (Verknüpfungen) bleiben immer erhalten
   const use = new Map();
   for (const w of ways.values()) for (const id of w.n) use.set(id, (use.get(id) || 0) + 1);
@@ -156,8 +161,7 @@ export async function build(fetchImpl = fetch, tiles = null) {
   };
 }
 
-async function main() {
-  const { data, stats } = await build();
+export function writeOut(data, stats) {
   fs.mkdirSync(OUT_DIR, { recursive: true });
   const prevPath = path.join(OUT_DIR, 'version.json');
   if (fs.existsSync(prevPath)) {
@@ -170,6 +174,11 @@ async function main() {
   fs.writeFileSync(path.join(OUT_DIR, 'de.json'), json);
   fs.writeFileSync(prevPath, JSON.stringify({ version: data.version, ways: stats.ways, nodes: stats.nodes, bytes: json.length }, null, 1));
   console.log('Fertig:', stats, (json.length / 1e6).toFixed(1) + ' MB');
+}
+
+async function main() {
+  const { data, stats } = await build();
+  writeOut(data, stats);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main().catch((e) => { console.error(e); process.exit(1); });
