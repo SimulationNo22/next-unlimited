@@ -36,7 +36,20 @@
       warn: 'Zeitweise begrenzt – Schilder beachten',
       dir: 'Richtung',
       winds: ['Norden', 'Nordosten', 'Osten', 'Südosten', 'Süden', 'Südwesten', 'Westen', 'Nordwesten'],
-      demoTag: 'DEMO'
+      demoTag: 'DEMO',
+      tut: 'Tutorial', tutEnd: 'Tutorial beenden', next: 'Weiter', done: 'Fertig', skip: 'Beenden',
+      tutSteps: [
+        ['Willkommen', 'Dieses Tutorial zeigt dir mit einer simulierten Fahrt auf der A9, was die Anzeigen bedeuten. Tippe auf „Weiter“, wenn du bereit bist.'],
+        ['Die Nadel', 'Die Nadel zeigt in deiner Fahrtrichtung entlang der Autobahn zum nächsten Abschnitt ohne Tempolimit. Sie folgt der Straße – nicht der Luftlinie. Am Rand steht die Entfernung.'],
+        ['Entfernung', 'Die große Zahl zeigt, wie viele Kilometer es noch bis zum nächsten Unbegrenzt-Abschnitt sind – auf deiner Autobahn, in deiner Fahrtrichtung.'],
+        ['Autobahn & Richtung', 'Oben siehst du, auf welcher Autobahn du bist und in welche Richtung du fährst. Vor einem Kreuz steht hier, wie weit es noch bis dorthin ist.'],
+        ['Am Kreuz', 'Gibt es über ein Kreuz einen anderen Weg zu einem unbegrenzten Abschnitt, erscheinen bis zu zwei schwächere Nadeln. Sie zeigen die Alternativen samt Entfernung.'],
+        ['Zeitweise begrenzt', 'Leuchtet dieser Hinweis weiß, gilt auf dem Abschnitt zeitweise ein Limit – etwa nachts, bei Nässe oder per Anzeigetafel. Dann bitte die Schilder beachten. Ausgegraut heißt: kein solcher Hinweis.'],
+        ['Tempo & Limit', 'Unten stehen deine aktuelle Geschwindigkeit und das Limit, das laut Karte gerade gilt.'],
+        ['Unbegrenzt!', 'Bist du im Abschnitt ohne Tempolimit, geht die Nadel aus. Die Striche am Rand füllen sich nach und nach, je weiter du den Abschnitt schon gefahren bist.'],
+        ['Wie weit noch?', 'Jetzt zeigt die große Zahl, wie viele Kilometer der unbegrenzte Abschnitt noch geht.'],
+        ['Fertig', 'Das war’s. Starte die App vor der Fahrt, steck das Handy in die Halterung und bediene es unterwegs nicht. Gute Fahrt!']
+      ]
     },
     en: {
       subtitle: 'Your compass to the next unlimited sign',
@@ -68,7 +81,20 @@
       warn: 'Limits at times – watch the signs',
       dir: 'Heading',
       winds: ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest'],
-      demoTag: 'DEMO'
+      demoTag: 'DEMO',
+      tut: 'Tutorial', tutEnd: 'End tutorial', next: 'Next', done: 'Done', skip: 'Exit',
+      tutSteps: [
+        ['Welcome', 'This tutorial uses a simulated drive on the A9 to show you what each display means. Tap “Next” when you’re ready.'],
+        ['The needle', 'The needle points in your driving direction along the motorway to the next section without a speed limit. It follows the road, not a straight line. The distance is shown on the rim.'],
+        ['Distance', 'The big number shows how many kilometres are left to the next unlimited section – on your motorway, in your direction.'],
+        ['Motorway & direction', 'At the top you see which motorway you are on and which way you are heading. Before an interchange it shows how far away it is.'],
+        ['At an interchange', 'If another route via an interchange leads to an unlimited section, up to two fainter needles appear. They show the alternatives and their distance.'],
+        ['Temporary limits', 'When this note is lit white, a limit applies part of the time on this section – at night, in the wet or via electronic signs. Watch the signs. Greyed out means no such note.'],
+        ['Speed & limit', 'At the bottom you see your current speed and the limit that applies right now according to the map.'],
+        ['Unlimited!', 'Inside a section without a speed limit the needle goes dark. The ticks around the rim fill up as you drive through the section.'],
+        ['How much is left?', 'Now the big number shows how many kilometres of the unlimited section are left.'],
+        ['Done', 'That’s it. Start the app before you drive, put your phone in the holder and don’t use it on the move. Have a good drive!']
+      ]
     }
   };
   var lang = 'de';
@@ -133,11 +159,12 @@
   var hasCache = false;
   function updateDataState() {
     var ver = S.dataVersion ? ' · ' + t('asOf') + ' ' + new Date(S.dataVersion).toLocaleDateString(lang === 'de' ? 'de-DE' : 'en-GB') : '';
-    $('dataState').textContent = DEMO ? t('demo') : (hasCache ? t('dataCached') + ver : t('dataLater'));
+    $('dataState').textContent = DEMO ? t(TUT ? 'tut' : 'demo') : (hasCache ? t('dataCached') + ver : t('dataLater'));
   }
 
   // ---------- Zustand ----------
-  var DEMO = /[?&]demo/.test(location.search);
+  var TUT = /[?&]tutorial/.test(location.search);
+  var DEMO = TUT || /[?&]demo/.test(location.search);
   // Lichtreflexe in Skala/Innenwand; Fallback: ?reflect=0 in der Adresse oder hier auf false setzen
   var REFLECT = !/[?&]reflect=0/.test(location.search);
   // Designstudie Unbegrenzt-Fortschritt: 'ticks' = Skalenstriche glühen nacheinander (Standard),
@@ -738,13 +765,14 @@
       useCompact(comp);
       var g = S.graph;
       // Kurze Schleife: kurz vor dem Kreuz starten, nach dem Unbegrenzt-Abschnitt von vorn
-      var START = 49.565, END = 49.035, SPEEDUP = 30;
+      var START = 49.565, END = 49.035, SPEEDUP = TUT ? 20 : 30;
       function reset() { var sn = g.snap(START, 11.0002, 180, 10, null); e = sn.edge; along = 0; }
       var e, along; reset();
       var last = Date.now();
       var demoDate = new Date(); demoDate.setHours(14, 0, 0, 0);
       function step() {
         var now = Date.now(), dt = Math.min(0.5, (now - last) / 1000); last = now;
+        if (TUT && Tut.paused) return;
         var kmh = g.isUnl(e) ? 230 : (g.lim[e] > 0 ? g.lim[e] - 2 : 128);
         along += (kmh / 3.6) * dt * SPEEDUP;
         while (along > g.len[e]) {
@@ -760,12 +788,95 @@
         S.pos = { lat: la, lon: g.lon[a] + (g.lon[b] - g.lon[a]) * f, acc: 8, date: demoDate };
         S.heading = g.brg[e]; S.headingAt = now; S.speed = kmh / 3.6;
         update();
+        if (TUT) Tut.check();
       }
       setInterval(step, 250);
       step();
+      if (TUT) Tut.start();
     };
     document.body.appendChild(s);
   }
+
+  // ---------- Tutorial: Overlay mit Spotlight, weiter per Tippen ----------
+  var Tut = (function () {
+    // Jeder Schritt: was hervorgehoben wird und welcher Fahrzustand dafür erreicht sein muss
+    var STEPS = [
+      { sel: null, until: function (r) { return r && r.main && !r.inUnl; } },
+      { sel: '#dial', round: true, until: function (r) { return r && r.main && !r.inUnl; } },
+      { sel: '.readout', until: function (r) { return r && r.main && !r.inUnl; } },
+      { sel: '.top .road', until: function (r) { return r && r.main && !r.inUnl; } },
+      { sel: '#dial', round: true, until: function (r) { return r && !r.inUnl && r.ghosts && r.ghosts.length > 0; }, settle: 1600 },
+      { sel: '#warn', until: function (r) { return r && !r.inUnl; } },
+      { sel: '.bottom', until: function (r) { return r && !r.inUnl; } },
+      { sel: '#dial', round: true, until: function (r) { return r && r.inUnl && U.frac > 0.12; }, settle: 0 },
+      { sel: '.readout', until: function (r) { return r && r.inUnl; } },
+      { sel: null, until: function () { return true; } }
+    ];
+    var i = -1, waiting = false, readyAt = 0, ov, spot, card;
+    function build() {
+      ov = document.createElement('div'); ov.className = 'tut'; ov.innerHTML =
+        '<div class="tut-spot"></div><div class="tut-card raised"><div class="tut-k"></div><h3 class="tut-h"></h3><p class="tut-p"></p>' +
+        '<div class="tut-row"><button type="button" class="tut-skip"></button><button type="button" class="tut-next"></button></div></div>';
+      document.body.appendChild(ov);
+      spot = ov.querySelector('.tut-spot'); card = ov.querySelector('.tut-card');
+      pressable(ov.querySelector('.tut-next'), 'pressed');
+      ov.querySelector('.tut-next').addEventListener('click', next);
+      ov.querySelector('.tut-skip').addEventListener('click', function () { setTimeout(function () { location.href = './'; }, 120); });
+      window.addEventListener('resize', place);
+    }
+    function place() {
+      if (i < 0 || waiting) return;
+      var st = STEPS[i], el = st.sel && document.querySelector(st.sel), vh = window.innerHeight;
+      if (el) {
+        var r = el.getBoundingClientRect(), pad = st.round ? 6 : 10;
+        spot.style.left = (r.left - pad) + 'px'; spot.style.top = (r.top - pad) + 'px';
+        spot.style.width = (r.width + 2 * pad) + 'px'; spot.style.height = (r.height + 2 * pad) + 'px';
+        spot.style.borderRadius = st.round ? '50%' : '22px';
+        spot.classList.remove('none');
+        // Karte auf die Seite, auf der mehr Platz ist
+        var below = vh - r.bottom > r.top;
+        card.style.top = below ? Math.min(vh - card.offsetHeight - 16, r.bottom + pad + 14) + 'px' : '';
+        card.style.bottom = below ? '' : Math.max(16, vh - r.top + pad + 14) + 'px';
+      } else {
+        spot.classList.add('none');
+        spot.style.left = '50%'; spot.style.top = '45%'; spot.style.width = '0px'; spot.style.height = '0px';
+        card.style.top = ''; card.style.bottom = Math.round(vh * 0.36) + 'px';
+      }
+    }
+    function show() {
+      var txt = t('tutSteps')[i];
+      ov.querySelector('.tut-k').textContent = (i + 1) + ' / ' + STEPS.length;
+      ov.querySelector('.tut-h').textContent = txt[0];
+      ov.querySelector('.tut-p').textContent = txt[1];
+      ov.querySelector('.tut-next').textContent = i === STEPS.length - 1 ? t('done') : t('next');
+      ov.querySelector('.tut-skip').textContent = t('skip');
+      ov.querySelector('.tut-skip').style.visibility = i === STEPS.length - 1 ? 'hidden' : '';
+      ov.classList.remove('wait');
+      place();
+    }
+    function next() {
+      if (waiting) return;
+      if (i === STEPS.length - 1) { setTimeout(function () { location.href = './'; }, 120); return; }
+      i++; waiting = true; readyAt = 0;
+      ov.classList.add('wait');           // Overlay hellt auf, die Fahrt läuft weiter bis zum passenden Moment
+      Tut.paused = false;
+      check();
+    }
+    function check() {
+      if (!waiting) return;
+      var st = STEPS[i];
+      if (!st.until(S.res)) { readyAt = 0; return; }
+      var settle = st.settle == null ? 0 : st.settle;
+      if (!readyAt) readyAt = Date.now() + settle;
+      if (Date.now() < readyAt) return;
+      waiting = false; Tut.paused = true;
+      setTimeout(show, 350);              // kurz warten, bis die Nadeln zur Ruhe kommen
+    }
+    return {
+      paused: false, check: check,
+      start: function () { build(); next(); }
+    };
+  })();
 
   // ---------- Easter Egg ----------
   // 5× aufs Schild tippen: unter dem Schild flackert eine kleine orange 22 auf wie eine Kontrollleuchte
@@ -799,7 +910,8 @@
   if (isIOS && !isStandalone()) $('iosHint').classList.remove('hidden');
   if (RINGMODE === 'ticks') $('dial').classList.add('ticks');
   if (!REFLECT) { $('reflect').style.display = 'none'; ['floor0', 'floor1', 'floor2'].forEach(function (id) { $(id).style.display = 'none'; }); }
-  if (DEMO) { $('demoLink').classList.add('hidden'); $('demoEnd').classList.remove('hidden'); document.querySelector('.top').classList.add('demo'); }
+  if (DEMO) { $('demoLink').classList.add('hidden'); $('tutLink').classList.add('hidden'); $('demoEnd').classList.remove('hidden'); document.querySelector('.top').classList.add('demo'); }
+  if (TUT) { $('demoEnd').setAttribute('data-t', 'tutEnd'); $('demoEnd').textContent = t('tutEnd'); $('dataState').textContent = t('tut'); }
   idbGet('de').then(function (c) {
     if (c) { hasCache = true; S.dataVersion = c.version; updateDataState(); }
     else idbGet('region').then(function (r) { hasCache = !!r; updateDataState(); });
