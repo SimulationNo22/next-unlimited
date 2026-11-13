@@ -130,6 +130,8 @@
 
   // ---------- Zustand ----------
   var DEMO = /[?&]demo/.test(location.search);
+  // Lichtreflexe in Skala/Innenwand; Fallback: ?reflect=0 in der Adresse oder hier auf false setzen
+  var REFLECT = !/[?&]reflect=0/.test(location.search);
   var S = {
     graph: null, region: null, loading: false, dataError: false,
     pos: null, heading: null, headingAt: 0, speed: null, gpsError: null,
@@ -276,7 +278,8 @@
   // ---------- Auswertung + Darstellung ----------
   var needles = [0, 1, 2].map(function (i) {
     return { g: $('nd' + i), glow: $('glow' + i), lbl: $('lbl' + i), cur: 0, target: 0, on: false, init: false,
-      glowOp: [0.45, 0.28, 0.14][i] };
+      glowOp: [0.45, 0.28, 0.14][i],
+      refl: REFLECT ? $('refl' + i) : null, reflGrad: REFLECT ? $('rg' + i) : null, reflOp: [1, 0.6, 0.32][i] };
   });
 
   function update() {
@@ -306,6 +309,7 @@
     n.g.classList.toggle('off', !show);
     n.lbl.parentNode.style.opacity = show ? 1 : 0;
     n.glow.style.opacity = show ? n.glowOp : 0;
+    if (n.refl) n.refl.style.opacity = show ? n.reflOp : 0;
   }
 
   function setStatus(msg) {
@@ -338,10 +342,10 @@
     else { ls.className = 'limitsign none-known'; ls.textContent = '–'; }
 
     var dial = $('dial');
-    var unlBox = $('unlBox'), warn = $('warn');
+    var warn = $('warn');
     var hideAll = function () {
       for (var i = 0; i < 3; i++) setNeedle(i, false);
-      unlBox.classList.add('vh'); warn.classList.add('vh');
+      warn.classList.add('vh');
       $('ringGroup').classList.add('off');
       dial.classList.remove('is-unl');
       if (U.active) leaveUnl();
@@ -391,9 +395,6 @@
       $('bigNum').textContent = fmtKm(res.unlRemaining);
       $('bigLabel').textContent = t('unlimited');
       $('bigLabel').className = 'label hot';
-      unlBox.classList.remove('vh');
-      var p = total > 0 ? (res.unlDriven / total) * 100 : 0;
-      $('unlFill').style.width = 'calc(' + p.toFixed(1) + '% + 7px)';
       warn.classList.toggle('vh', !res.unlCond);
       $('warnText').textContent = t('warn');
       return;
@@ -402,7 +403,6 @@
     // ---- Normale Fahrt ----
     dial.classList.remove('is-unl');
     $('ringGroup').classList.add('off');
-    unlBox.classList.add('vh');
     if (U.active) leaveUnl();
     if (res.main) {
       setNeedle(0, true, E.angDiff(H, res.main.brg), fmtKm(res.main.dist) + ' km');
@@ -529,6 +529,11 @@
         var tr = 'rotate(' + a.toFixed(2) + ' 170 170)';
         n.g.setAttribute('transform', tr);
         n.glow.setAttribute('transform', tr);
+        if (n.reflGrad) {
+          var ra = a * Math.PI / 180;
+          n.reflGrad.setAttribute('cx', (170 + 123 * Math.sin(ra)).toFixed(1));
+          n.reflGrad.setAttribute('cy', (170 - 123 * Math.cos(ra)).toFixed(1));
+        }
         var top = Math.abs(a) <= 100;
         var off = top ? ((a + 180 + 360) % 360) / 360 * 100 : ((360 - a) % 360) / 360 * 100;
         n.lbl.setAttribute('href', top ? '#bezTop' : '#bezBot');
@@ -628,6 +633,7 @@
   // ---------- Init ----------
   var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   if (isIOS && !isStandalone()) $('iosHint').classList.remove('hidden');
+  if (!REFLECT) $('reflect').style.display = 'none';
   if (DEMO) { $('demoLink').classList.add('hidden'); $('demoEnd').classList.remove('hidden'); document.querySelector('.top').classList.add('demo'); }
   idbGet('de').then(function (c) {
     if (c) { hasCache = true; S.dataVersion = c.version; updateDataState(); }

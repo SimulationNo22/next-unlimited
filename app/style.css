@@ -174,3 +174,8 @@ body { -webkit-user-select: none; user-select: none; }
 .medal-face.back { transform: rotateY(180deg) translateZ(4px); }
 .medal-rim { background: radial-gradient(circle at 35% 30%, #c9cdd2, #7d8288 70%, #4a4e53); }
 .dial.egg #hubSign { opacity: 0; transition: none; }
+
+/* Lichtreflexe in der Hohlkehle */
+.refl { opacity: 0; transition: opacity .7s ease; }
+.refl-hub { opacity: 0; transition: opacity 1.2s ease; }
+.dial.is-unl .refl-hub { opacity: .55; }
