@@ -1,10 +1,9 @@
 # Holt jede Woche die aktuellen Autobahn-Tempolimits von OpenStreetMap
 # und legt sie als app/data/de.json ab. Netlify veröffentlicht die neue Version danach automatisch.
-name: Autobahndaten aktualisieren
+# Reserve: alter Weg über Overpass-Server (nur noch per Knopfdruck). Standard ist data-geofabrik.yml.
+name: Autobahndaten aktualisieren (Overpass, Reserve)
 on:
-  schedule:
-    - cron: '17 3 * * 1'   # montags 03:17 UTC
-  workflow_dispatch:        # zusätzlich per Knopfdruck bei GitHub startbar
+  workflow_dispatch:
 permissions:
   contents: write
 jobs:

@@ -1,6 +1,8 @@
 # Autobahndaten aus dem Geofabrik-Deutschland-Extrakt (unabhängig von Overpass-Servern)
 name: Autobahndaten aktualisieren (Geofabrik)
 on:
+  schedule:
+    - cron: '17 3 * * 1'   # montags 03:17 UTC
   workflow_dispatch:
     inputs:
       test:
@@ -30,19 +32,19 @@ jobs:
           ls -lh mw.osm.pbf mw.opl
       - name: Daten bauen
         env:
-          OUT_DIR: ${{ inputs.test && 'test-out' || 'app/data' }}
+          OUT_DIR: ${{ inputs.test == true && 'test-out' || 'app/data' }}
         run: node scripts/build-data-pbf.mjs mw.opl
       - name: Mit bisherigem Datensatz vergleichen
-        if: ${{ inputs.test }}
+        if: ${{ inputs.test == true }}
         run: node scripts/compare-data.mjs app/data/de.json test-out/de.json
       - name: Testergebnis bereitstellen
-        if: ${{ inputs.test }}
+        if: ${{ inputs.test == true }}
         uses: actions/upload-artifact@v4
         with:
           name: geofabrik-test
           path: test-out/
       - name: Speichern, falls sich etwas geändert hat
-        if: ${{ !inputs.test }}
+        if: ${{ inputs.test != true }}
         run: |
           git config user.name "datenbot"
           git config user.email "datenbot@users.noreply.github.com"
