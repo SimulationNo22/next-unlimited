@@ -348,7 +348,7 @@
     var warn = $('warn');
     var hideAll = function () {
       for (var i = 0; i < 3; i++) setNeedle(i, false);
-      warn.classList.add('vh');
+      warn.classList.add('idle'); $('warnText').textContent = t('warn');
       $('ringGroup').classList.add('off');
       dial.classList.remove('is-unl');
       if (U.active) leaveUnl();
@@ -393,7 +393,7 @@
       $('bigNum').textContent = fmtKm(res.unlRemaining);
       $('bigLabel').textContent = t('unlimited');
       $('bigLabel').className = 'label hot';
-      warn.classList.toggle('vh', !res.unlCond);
+      warn.classList.toggle('idle', !res.unlCond);
       $('warnText').textContent = t('warn');
       return;
     }
@@ -421,7 +421,7 @@
     // Kreuz-Hinweis steht in der Kopfzeile statt der Himmelsrichtung
     if (gh.length && res.kreuz) $('dirText').textContent = fmtKm(res.kreuz.dist) + ' km · ' + (res.kreuz.name || t('kreuz'));
     var showWarn = !!(res.main && res.main.cond);
-    warn.classList.toggle('vh', !showWarn);
+    warn.classList.toggle('idle', !showWarn);
     $('warnText').textContent = t('warn');
   }
 
