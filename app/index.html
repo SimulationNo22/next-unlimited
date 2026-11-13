@@ -84,6 +84,11 @@
     <div class="d-hub"></div>
     <svg viewBox="0 0 340 340" class="d-svg" role="img" id="dialSvg" aria-label="">
       <defs>
+        <radialGradient id="pressGrad" cx="0.56" cy="0.6" r="0.55">
+          <stop offset="0" stop-color="#000" stop-opacity="0"/>
+          <stop offset="0.72" stop-color="#000" stop-opacity="0.05"/>
+          <stop offset="1" stop-color="#000" stop-opacity="0.34"/>
+        </radialGradient>
         <linearGradient id="hot" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stop-color="#ffd27f"/><stop offset="0.5" stop-color="#ff7a26"/><stop offset="1" stop-color="#e8480f"/>
         </linearGradient>
@@ -130,7 +135,8 @@
       <g id="nd0" class="needle off"><polygon class="dark" points="170,86 183,113 157,113" fill="url(#unlitGrad)" stroke="url(#unlitGrad)" stroke-width="7" stroke-linejoin="round" filter="url(#fUnlit)"/><polygon class="ember" points="170,86 183,113 157,113" fill="url(#emberGrad)" stroke="url(#emberGrad)" stroke-width="7" stroke-linejoin="round"/><polygon class="lit" points="170,86 183,113 157,113" fill="url(#hot)" stroke="url(#hot)" stroke-width="7" stroke-linejoin="round" filter="url(#fGlow1)"/></g>
       <g id="ringHead" class="head off"><polygon id="headTri" points="170,86 183,113 157,113" fill="url(#hot)" stroke="url(#hot)" stroke-width="7" stroke-linejoin="round" filter="url(#fGlow1)"/><circle id="headBall" cx="170" cy="104.7" r="13" fill="#ff8a3d" filter="url(#fGlow1)" style="opacity:0"/></g>
 
-      <use href="#sign" x="104" y="104" width="132" height="132" id="hubSign" filter="url(#fSign)"/>
+      <g id="hubPress"><use href="#sign" x="104" y="104" width="132" height="132" id="hubSign" filter="url(#fSign)"/>
+      <circle id="signPress" cx="170" cy="170" r="64" fill="url(#pressGrad)"/></g>
 
       <text class="bez bez0" filter="url(#fBez0)"><textPath id="lbl0" href="#bezTop" startOffset="50%" text-anchor="middle"></textPath></text>
       <text class="bez bez1" filter="url(#fBez1)"><textPath id="lbl1" href="#bezTop" startOffset="50%" text-anchor="middle"></textPath></text>
@@ -208,5 +214,6 @@
 
 <script src="engine.js"></script>
 <script src="app.js"></script>
+<label id="hapt" aria-hidden="true" style="position:fixed;left:-99px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none"><input type="checkbox" switch tabindex="-1"></label>
 </body>
 </html>

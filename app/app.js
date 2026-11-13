@@ -259,6 +259,65 @@
     if (document.visibilityState === 'visible' && $('drive').classList.contains('active')) keepAwake();
   });
 
+  // ---------- Druckschalter: Klang + Haptik ----------
+  var AC = null;
+  function audio() {
+    if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; } }
+    if (AC && AC.state === 'suspended') AC.resume();
+    return AC;
+  }
+  // kurzer, gefilterter Rauschimpuls (Kunststoff/Metall-Anschlag)
+  function burst(ac, t, freq, q, dur, gain) {
+    var len = Math.ceil(ac.sampleRate * dur), buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0);
+    for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 4);
+    var src = ac.createBufferSource(); src.buffer = buf;
+    var bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = freq; bp.Q.value = q;
+    var g = ac.createGain(); g.gain.value = gain;
+    src.connect(bp); bp.connect(g); g.connect(ac.destination); src.start(t);
+  }
+  // gedämpfter Körper des Schalters (tiefes „Tock“)
+  function body(ac, t, f0, f1, dur, gain) {
+    var o = ac.createOscillator(), g = ac.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + dur + 0.02);
+  }
+  function clickSound(down) {
+    var ac = audio(); if (!ac) return;
+    var t = ac.currentTime + 0.005;
+    if (down) {
+      // Einrasten: satter Anschlag + kurzer heller Rastpunkt kurz danach
+      body(ac, t, 190, 85, 0.09, 0.55);
+      burst(ac, t, 1500, 1.2, 0.035, 0.9);
+      burst(ac, t + 0.012, 3600, 4, 0.012, 0.35);
+    } else {
+      // Loslassen: leichteres, höheres Zurückfedern
+      body(ac, t, 260, 140, 0.05, 0.22);
+      burst(ac, t, 2400, 2, 0.018, 0.45);
+    }
+  }
+  function haptic(strong) {
+    try { if (navigator.vibrate) { navigator.vibrate(strong ? 14 : 7); return; } } catch (e) {}
+    // iOS (ab 18): Umschalter-Haptik über verstecktes Schalter-Feld
+    try { var l = $('hapt'); if (l) l.click(); } catch (e) {}
+  }
+  function pressable(el, cls, target, onUp) {
+    var on = false, tgt = target || el;
+    function down(e) { if (on) return; on = true; tgt.classList.add(cls); clickSound(true); haptic(true); }
+    function up(e, cancel) { if (!on) return; on = false; tgt.classList.remove(cls); if (!cancel) { clickSound(false); if (onUp) onUp(e); } }
+    el.addEventListener('pointerdown', down);
+    el.addEventListener('pointerup', function (e) { up(e); });
+    el.addEventListener('pointercancel', function (e) { up(e, true); });
+    el.addEventListener('pointerleave', function (e) { up(e, true); });
+  }
+  pressable($('go'), 'pressed');
+  pressable($('medal'), 'sign-pressed', $('dial'));
+  // Demo beenden: kurz warten, damit der Klick hörbar ist und das Eindrücken sichtbar wird
+  pressable($('demoEnd'), 'pressed');
+  $('demoEnd').addEventListener('click', function (e) {
+    e.preventDefault(); var href = this.href; setTimeout(function () { location.href = href; }, 160);
+  });
+
   // ---------- Start ----------
   function isStandalone() {
     return (window.matchMedia && (matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches)) || navigator.standalone === true;
