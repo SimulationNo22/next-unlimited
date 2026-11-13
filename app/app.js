@@ -576,10 +576,11 @@
     // Licht: gleitet stufenlos mit, läuft an beiden Enden über ~20° bzw. ~10° sanft aus
     if (lit >= 72) wedge(ctx, C, C.G, -180, 180, 1);
     else {
-      var FD = 20, N = 10;
-      wedge(ctx, C, C.G, 0, end - FD, 1);
+      // Licht strahlt auch nach vorn: Auslauf beginnt kurz vor der Front und reicht ~12° über sie hinaus
+      var FD = 20, N = 10, F0 = end - 8;
+      wedge(ctx, C, C.G, 0, F0, 1);
       for (var n = 0; n < N; n++) {
-        var b0 = end - FD + n * FD / N, b1 = b0 + FD / N;
+        var b0 = F0 + n * FD / N, b1 = b0 + FD / N;
         wedge(ctx, C, C.G, Math.max(0, b0), b1, 1 - (n + 0.5) / N);
       }
       for (var m = 0; m < 5; m++) wedge(ctx, C, C.G, -(m + 1) * 2, -m * 2, 1 - (m + 0.5) / 5);
