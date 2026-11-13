@@ -503,7 +503,9 @@
   // Skalenstriche als Fortschritt: 72 Striche (alle 5°), die nacheinander zu glühen beginnen
   var lastTicks = -1;
   function drawTicks(f) {
-    if (Math.abs(f - lastTicks) < 0.0004) return;
+    // nur in festen Achtel-Strich-Stufen neu zeichnen – verhindert ständiges Neuzeichnen und Flimmern auf dem iPhone
+    f = Math.round(f * 576) / 576;
+    if (f === lastTicks) return;
     lastTicks = f;
     var cv = $('ringCanvas'), dpr = window.devicePixelRatio || 1;
     var W = Math.round(cv.clientWidth * dpr);
@@ -526,25 +528,30 @@
       ctx.fillStyle = rg;
       ctx.fillRect(gx - 34 * k, gy - 34 * k, 68 * k, 68 * k);
     }
-    // Innenkante zur Lünette fängt etwas Licht
-    ctx.strokeStyle = 'rgba(255,150,70,0.28)';
-    ctx.lineWidth = 1.6 * k;
-    ctx.shadowColor = 'rgba(255,107,31,0.6)';
-    ctx.shadowBlur = 6 * k;
-    ctx.beginPath(); ctx.arc(c, c, 127 * k, q, q + th, false); ctx.stroke();
+    // Innenkante zur Lünette fängt etwas Licht – als weich auslaufende Flecken, damit es keine harten Enden gibt
+    for (var w2 = 0; w2 < lit; w2 += 1) {
+      var aw = (w2 * 5 + 0.39) * Math.PI / 180, fw = Math.min(1, lit - w2);
+      var wx = c + 127 * k * Math.sin(aw), wy = c - 127 * k * Math.cos(aw);
+      var wg = ctx.createRadialGradient(wx, wy, 0, wx, wy, 13 * k);
+      wg.addColorStop(0, 'rgba(255,150,70,' + (0.16 * fw).toFixed(3) + ')');
+      wg.addColorStop(1, 'rgba(255,150,70,0)');
+      ctx.fillStyle = wg;
+      ctx.fillRect(wx - 13 * k, wy - 13 * k, 26 * k, 26 * k);
+    }
     ctx.restore();
     ctx.lineCap = 'round';
     for (var i = 0; i <= full && i < 72; i++) {
       var alpha = i < full ? 1 : lit - full;
       if (alpha <= 0.01) continue;
       var a = (i * 5 + 0.39) * Math.PI / 180, s = Math.sin(a), co = Math.cos(a);
-      var head = i >= full - 1;
-      var tt = full > 1 ? i / (full - 1) : 1;
-      var col = head ? '255,176,86' : (Math.round(232 + 23 * tt) + ',' + Math.round(72 + 50 * tt) + ',' + Math.round(15 + 23 * tt));
-      ctx.strokeStyle = 'rgba(' + col + ',' + alpha.toFixed(3) + ')';
+      // Nähe zur Front (0 = weit dahinter, 1 = vorderster Strich) – fließend, kein Springen
+      var hot = Math.max(0, 1 - (lit - i - 0.5) / 3);
+      var tt = Math.min(1, i / Math.max(1, lit - 1));
+      var r = Math.round(232 + 23 * Math.max(tt, hot)), gC = Math.round(72 + 50 * tt + 54 * hot), bC = Math.round(15 + 23 * tt + 48 * hot);
+      ctx.strokeStyle = 'rgba(' + r + ',' + Math.min(176, gC) + ',' + Math.min(86, bC) + ',' + alpha.toFixed(3) + ')';
       ctx.shadowColor = 'rgba(255,107,31,' + (0.9 * alpha).toFixed(3) + ')';
-      ctx.shadowBlur = (head ? 12 : 7) * k;
-      ctx.lineWidth = (head ? 2.8 : 2.2) * k;
+      ctx.shadowBlur = (7 + 4 * hot) * k;
+      ctx.lineWidth = (2.2 + 0.5 * hot) * k;
       ctx.beginPath();
       ctx.moveTo(c + 113.6 * k * s, c - 113.6 * k * co);
       ctx.lineTo(c + 122.4 * k * s, c - 122.4 * k * co);
