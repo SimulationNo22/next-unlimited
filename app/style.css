@@ -52,7 +52,6 @@ body { -webkit-user-select: none; user-select: none; }
 .ring-glow { filter: drop-shadow(0 0 7px rgba(255,107,31,.8)); }
 .head { transition: opacity .6s ease; }
 .head.off { opacity: 0; }
-.needle.instant { transition: none; }
 
 /* ---------- Fahrt ---------- */
 /* oben mehr Abstand, damit nichts unter dem Statusleisten-Verlauf des iPhones liegt; Rest gleichmäßig verteilt */
@@ -78,9 +77,9 @@ body { -webkit-user-select: none; user-select: none; }
 .d-hub { position: absolute; left: 31.76%; top: 31.76%; width: 36.47%; height: 36.47%; border-radius: 50%;
   background: linear-gradient(145deg, #1d1f22, #101113); box-shadow: 8px 8px 18px #060607, -6px -6px 14px #212327; }
 .d-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.needle { transition: opacity .7s ease; }
-#glow0, #glow1, #glow2 { transition: opacity .7s ease; }
-.needle.off { opacity: 0; }
+.needle .lit { transition: opacity 1.4s ease; }
+#glow0, #glow1, #glow2 { transition: opacity 1.4s ease; }
+.needle.off .lit { opacity: 0; }   /* Nadel bleibt stehen, das Licht geht aus wie bei einer Glühbirne */
 .bez { font-family: 'Manrope', sans-serif; font-size: 16px; font-weight: 800; letter-spacing: .4px; transition: opacity .6s ease; }
 .bez0 { fill: #ff8a3d; }
 .bez1 { fill: #f2742c; }
@@ -176,8 +175,8 @@ body { -webkit-user-select: none; user-select: none; }
 .dial.egg #hubSign { opacity: 0; transition: none; }
 
 /* Lichtreflexe in der Hohlkehle */
-.refl { opacity: 0; transition: opacity .7s ease; }
+.refl { opacity: 0; transition: opacity 1.4s ease; }
 .refl-hub { opacity: 0; transition: opacity 1.2s ease; }
 .dial.is-unl .refl-hub { opacity: .4; }
 .dial.ticks.is-unl .refl-hub { opacity: .12; }
-.floor { transition: opacity .7s ease; }
+.floor { transition: opacity 1.4s ease; }

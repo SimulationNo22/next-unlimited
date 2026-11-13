@@ -134,7 +134,7 @@
   var REFLECT = !/[?&]reflect=0/.test(location.search);
   // Designstudie Unbegrenzt-Fortschritt: 'ticks' = Skalenstriche glühen nacheinander (Standard),
   // 'bezel' = Licht unter der Lünette (?ring=bezel)
-  var RINGMODE = /[?&]ring=bezel/.test(location.search) ? 'bezel' : 'ticks';
+  var RINGMODE = 'ticks';
   var S = {
     graph: null, region: null, loading: false, dataError: false,
     pos: null, heading: null, headingAt: 0, speed: null, gpsError: null,
@@ -280,7 +280,7 @@
 
   // ---------- Auswertung + Darstellung ----------
   var needles = [0, 1, 2].map(function (i) {
-    return { g: $('nd' + i), glow: $('glow' + i), lbl: $('lbl' + i), cur: 0, target: 0, on: false, init: false,
+    return { g: $('nd' + i), glow: $('glow' + i), lbl: $('lbl' + i), cur: 0, target: 0, on: false, init: true,
       glowOp: [0.45, 0.28, 0.14][i],
       refl: REFLECT ? $('refl' + i) : null, reflGrad: REFLECT ? $('rg' + i) : null, reflOp: [0.7, 0.42, 0.22][i],
       floor: REFLECT ? $('floor' + i) : null, floorOp: [0.2, 0.12, 0.06][i] };
@@ -300,16 +300,12 @@
     var n = needles[i];
     var was = n.on;
     n.on = show;
+    // Wie ein Analoginstrument: Nadeln verschwinden nie. Ausgeschaltet bleibt die Hauptnadel stehen,
+    // die Ghost-Nadeln schieben sich unter die Hauptnadel zurück (siehe tick()).
     if (show) {
-      if (!was) {
-        // Ghost-Nadeln wachsen aus der Hauptnadel heraus
-        if (i > 0 && needles[0].on) n.cur = needles[0].cur;
-        else if (!n.init) n.cur = angle;
-        n.init = true;
-      }
       n.target = angle;
       n.lbl.textContent = text;
-    } else if (toTop && n.init) n.target = 0;
+    }
     n.g.classList.toggle('off', !show);
     n.lbl.parentNode.style.opacity = show ? 1 : 0;
     n.glow.style.opacity = show ? n.glowOp : 0;
@@ -388,12 +384,8 @@
       var frac = total > 0 ? res.unlDriven / total : 0;
       U.fracTarget = frac;
       if (modeChanged) {
-        // Nadel springt hoch in die Rille und fährt dort als Spitze des Rings weiter
+        // Nadel bleibt stehen und dimmt aus; danach beginnen die Skalenstriche zu glühen
         U.active = true; U.t0 = performance.now(); U.frac = 0;
-        U.startAngle = needles[0].on || needles[0].init ? needles[0].cur : 0;
-        needles[0].g.classList.add('instant');
-        needles[0].g.style.opacity = 0;
-        $('ringHead').classList.remove('off');
       }
       $('bigPre').textContent = t('still');
       $('bigNum').textContent = fmtKm(res.unlRemaining);
@@ -450,10 +442,7 @@
     $('ringConicWrap').style.transition = 'opacity .8s ease';
     $('ringConicWrap').style.opacity = 0;
     setTimeout(function () { $('ringConicWrap').style.transition = ''; }, 900);
-    var n0 = needles[0];
-    n0.cur = 0; n0.init = true;
-    n0.g.classList.remove('instant');
-    n0.g.style.opacity = '';
+
   }
   // Ring + Spitze als EINE Form (Spitze so breit wie der Ring, Verlauf wie die Nadel)
   var TIP = 13.6 / 139, CAP = 6.5 / 139;
@@ -538,6 +527,12 @@
   }
   function tickUnl(now) {
     var t = (now - U.t0) / 1000;
+    if (RINGMODE === 'ticks') {
+      var on = t > 1.1; // erst wenn die Nadel ausgedimmt ist
+      if (on) { U.frac += (U.fracTarget - U.frac) * 0.06; drawTicks(U.frac); }
+      $('ringConicWrap').style.opacity = on ? 1 : 0;
+      return;
+    }
     // Rille öffnet sich von oben symmetrisch nach beiden Seiten
     // 1) Nadel dreht nach oben  2) springt in die Rille und kippt in Fahrtrichtung
     var rot = easeInOut(clamp01(t / 0.35));
@@ -568,8 +563,9 @@
     if (U.active) tickUnl(performance.now());
     for (var i = 0; i < 3; i++) {
       var n = needles[i];
+      if (i > 0 && !n.on) n.target = needles[0].cur; // ausgeschaltete Ghost-Nadeln liegen unter der Hauptnadel
       if (n.init) {
-        n.cur += E.angDiff(n.cur, n.target) * (i === 0 ? 0.1 : 0.06);
+        n.cur += E.angDiff(n.cur, n.target) * (i === 0 ? 0.1 : (n.on ? 0.06 : 0.045));
         var a = n.cur;
         var tr = 'rotate(' + a.toFixed(2) + ' 170 170)';
         n.g.setAttribute('transform', tr);
