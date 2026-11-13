@@ -201,7 +201,7 @@ body { -webkit-user-select: none; user-select: none; }
 .tut-spot { position: fixed; border-radius: 22px; box-shadow: 0 0 0 200vmax rgba(6,7,8,.78), 0 0 0 2px rgba(255,138,61,.55), 0 0 24px rgba(255,107,31,.35);
   transition: left .45s cubic-bezier(.3,.7,.2,1), top .45s cubic-bezier(.3,.7,.2,1), width .45s cubic-bezier(.3,.7,.2,1), height .45s cubic-bezier(.3,.7,.2,1), border-radius .45s ease, box-shadow .4s ease; pointer-events: none; }
 .tut-spot.none { box-shadow: 0 0 0 200vmax rgba(6,7,8,.78); }
-.tut-card { position: fixed; left: 16px; right: 16px; max-width: 420px; margin: 0 auto; padding: 18px 20px 16px; border-radius: 24px;
+.tut-card { position: fixed; left: 16px; right: 16px; max-width: 420px; margin: 0 auto; padding: 14px 18px 12px; border-radius: 24px;
   background: linear-gradient(160deg, #1d1f23, #141518); box-shadow: 10px 10px 24px #050506, -6px -6px 16px #202227;
   transition: top .45s cubic-bezier(.3,.7,.2,1), height .3s ease; }
 /* beim Wechsel bleibt alles stehen: nur der Inhalt der Karte blendet kurz über, Spotlight und Karte gleiten zur neuen Stelle */
@@ -210,11 +210,11 @@ body { -webkit-user-select: none; user-select: none; }
 .tut.wait .tut-card { pointer-events: none; }
 .tut.pre .tut-card { opacity: 0; }
 .tut-k { font-size: 11px; font-weight: 800; letter-spacing: 2px; color: var(--orange, #ff6b1f); }
-.tut-h { margin: 6px 0 6px; font-size: 20px; font-weight: 800; color: #f2f3f5; }
-.tut-p { margin: 0; font-size: 15px; line-height: 1.5; color: #c4c8ce; }
-.tut-row { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
+.tut-h { margin: 4px 0 4px; font-size: 18px; font-weight: 800; color: #f2f3f5; }
+.tut-p { margin: 0; font-size: 14px; line-height: 1.45; color: #c4c8ce; }
+.tut-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
 .tut-skip { border: 0; background: none; padding: 8px 4px; font: 700 14px 'Manrope', sans-serif; color: var(--txt2); cursor: pointer; }
-.tut-next { border: 0; height: 46px; min-width: 120px; padding: 0 24px; border-radius: 23px; font: 800 16px 'Manrope', sans-serif; color: #1d1f23; cursor: pointer;
+.tut-next { border: 0; height: 42px; min-width: 120px; padding: 0 24px; border-radius: 23px; font: 800 16px 'Manrope', sans-serif; color: #1d1f23; cursor: pointer;
   background: linear-gradient(145deg, #ff8a3d, #e8480f); box-shadow: 0 0 16px rgba(255,107,31,.35), 4px 4px 10px rgba(0,0,0,.5);
   transition: transform .09s ease, box-shadow .12s ease, filter .12s ease; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 .tut-next.pressed { transform: scale(.96) translateY(1px); filter: brightness(.9); box-shadow: inset 3px 3px 7px rgba(110,30,0,.55), inset -2px -2px 6px rgba(255,190,140,.35); }

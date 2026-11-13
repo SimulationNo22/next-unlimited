@@ -39,16 +39,12 @@
       demoTag: 'DEMO',
       tut: 'Tutorial', tutEnd: 'Tutorial beenden', next: 'Weiter', done: 'Fertig', skip: 'Beenden',
       tutSteps: [
-        ['Willkommen', 'Dieses Tutorial zeigt dir mit einer simulierten Fahrt auf der A9, was die Anzeigen bedeuten. Tippe auf „Weiter“, wenn du bereit bist.'],
-        ['Die Nadel', 'Die Nadel zeigt in deiner Fahrtrichtung entlang der Autobahn zum nächsten Abschnitt ohne Tempolimit. Sie folgt der Straße – nicht der Luftlinie. Am Rand steht die Entfernung.'],
-        ['Entfernung', 'Die große Zahl zeigt, wie viele Kilometer es noch bis zum nächsten Unbegrenzt-Abschnitt sind – auf deiner Autobahn, in deiner Fahrtrichtung.'],
+        ['Nadel & Entfernung', 'Die Nadel zeigt entlang deiner Autobahn zum nächsten Abschnitt ohne Tempolimit – sie folgt der Straße, nicht der Luftlinie. Die große Zahl: wie viele Kilometer noch.'],
         ['Autobahn & Richtung', 'Oben siehst du, auf welcher Autobahn du bist und in welche Richtung du fährst. Vor einem Kreuz steht hier, wie weit es noch bis dorthin ist.'],
-        ['Am Kreuz', 'Gibt es über ein Kreuz einen anderen Weg zu einem unbegrenzten Abschnitt, erscheinen bis zu zwei schwächere Nadeln. Sie zeigen die Alternativen samt Entfernung.'],
-        ['Zeitweise begrenzt', 'Leuchtet dieser Hinweis weiß, gilt auf dem Abschnitt zeitweise ein Limit – etwa nachts, bei Nässe oder per Anzeigetafel. Dann bitte die Schilder beachten. Ausgegraut heißt: kein solcher Hinweis.'],
-        ['Tempo & Limit', 'Unten stehen deine aktuelle Geschwindigkeit und das Limit, das laut Karte gerade gilt.'],
-        ['Unbegrenzt!', 'Bist du im Abschnitt ohne Tempolimit, geht die Nadel aus. Die Striche am Rand füllen sich nach und nach, je weiter du den Abschnitt schon gefahren bist.'],
-        ['Wie weit noch?', 'Jetzt zeigt die große Zahl, wie viele Kilometer der unbegrenzte Abschnitt noch geht.'],
-        ['Fertig', 'Das war’s. Starte die App vor der Fahrt, steck das Handy in die Halterung und bediene es unterwegs nicht. Gute Fahrt!']
+        ['Am Kreuz', 'Führt über ein Kreuz ein anderer Weg zu einem unbegrenzten Abschnitt, erscheinen bis zu zwei schwächere Nadeln mit ihrer Entfernung.'],
+        ['Hinweis, Tempo & Limit', 'Weiß leuchtend: zeitweise gilt ein Limit, etwa nachts, bei Nässe oder per Anzeigetafel – Schilder beachten. Ausgegraut: kein solcher Hinweis. Unten: dein Tempo und das Limit laut Karte.'],
+        ['Unbegrenzt!', 'Ohne Tempolimit geht die Nadel aus, und die Striche am Rand füllen sich, je weiter du fährst. Die Zahl zeigt, wie viele Kilometer es noch unbegrenzt geht.'],
+        ['Fertig', 'Starte die App vor der Fahrt, steck das Handy in die Halterung und bediene es unterwegs nicht. Gute Fahrt!']
       ]
     },
     en: {
@@ -84,16 +80,12 @@
       demoTag: 'DEMO',
       tut: 'Tutorial', tutEnd: 'End tutorial', next: 'Next', done: 'Done', skip: 'Exit',
       tutSteps: [
-        ['Welcome', 'This tutorial uses a simulated drive on the A9 to show you what each display means. Tap “Next” when you’re ready.'],
-        ['The needle', 'The needle points in your driving direction along the motorway to the next section without a speed limit. It follows the road, not a straight line. The distance is shown on the rim.'],
-        ['Distance', 'The big number shows how many kilometres are left to the next unlimited section – on your motorway, in your direction.'],
+        ['Needle & distance', 'The needle points along your motorway to the next section without a speed limit – it follows the road, not a straight line. The big number: kilometres left.'],
         ['Motorway & direction', 'At the top you see which motorway you are on and which way you are heading. Before an interchange it shows how far away it is.'],
-        ['At an interchange', 'If another route via an interchange leads to an unlimited section, up to two fainter needles appear. They show the alternatives and their distance.'],
-        ['Temporary limits', 'When this note is lit white, a limit applies part of the time on this section – at night, in the wet or via electronic signs. Watch the signs. Greyed out means no such note.'],
-        ['Speed & limit', 'At the bottom you see your current speed and the limit that applies right now according to the map.'],
-        ['Unlimited!', 'Inside a section without a speed limit the needle goes dark. The ticks around the rim fill up as you drive through the section.'],
-        ['How much is left?', 'Now the big number shows how many kilometres of the unlimited section are left.'],
-        ['Done', 'That’s it. Start the app before you drive, put your phone in the holder and don’t use it on the move. Have a good drive!']
+        ['At an interchange', 'If another route via an interchange leads to an unlimited section, up to two fainter needles appear with their distance.'],
+        ['Notice, speed & limit', 'Lit white: a limit applies part of the time, e.g. at night, in the wet or via electronic signs – watch the signs. Greyed out: no such notice. At the bottom: your speed and the map’s limit.'],
+        ['Unlimited!', 'Without a speed limit the needle goes dark and the ticks around the rim fill up as you drive. The number shows how many unlimited kilometres are left.'],
+        ['Done', 'Start the app before you drive, put your phone in the holder and don’t use it on the move. Have a good drive!']
       ]
     }
   };
@@ -811,15 +803,11 @@
   var Tut = (function () {
     // Jeder Schritt: was hervorgehoben wird und welcher Fahrzustand dafür erreicht sein muss
     var STEPS = [
-      { sel: null, until: function (r) { return r && r.main && !r.inUnl; } },
-      { sel: '#dial', round: true, until: function (r) { return r && r.main && !r.inUnl; } },
-      { sel: '.readout', until: function (r) { return r && r.main && !r.inUnl; } },
-      { sel: '.top .road', until: function (r) { return r && r.main && !r.inUnl; } },
-      { sel: '#dial', round: true, until: function (r) { return r && !r.inUnl && r.ghosts && r.ghosts.length > 0; }, settle: 1300 },
-      { sel: '#warn', until: function (r) { return r && !r.inUnl; } },
-      { sel: '.bottom', until: function (r) { return r && !r.inUnl; } },
-      { sel: '#dial', round: true, until: function (r) { return r && r.inUnl && r.unlDriven > 0.3 * (r.unlDriven + r.unlRemaining); }, settle: 2600 },
-      { sel: '.readout', until: function (r) { return r && r.inUnl; } },
+      { sel: ['#dial', '.readout'], until: function (r) { return r && r.main && !r.inUnl; } },
+      { sel: ['.top .road'], until: function (r) { return r && r.main && !r.inUnl; } },
+      { sel: ['#dial'], round: true, until: function (r) { return r && !r.inUnl && r.ghosts && r.ghosts.length > 0; }, settle: 1300 },
+      { sel: ['#warn', '.bottom'], until: function (r) { return r && !r.inUnl; } },
+      { sel: ['#dial', '.readout'], until: function (r) { return r && r.inUnl && r.unlDriven > 0.3 * (r.unlDriven + r.unlRemaining); }, settle: 2600 },
       { sel: null, until: function () { return true; } }
     ];
     var i = -1, waiting = false, readyAt = 0, ov, spot, card;
@@ -836,16 +824,26 @@
     }
     function place() {
       if (i < 0 || waiting) return;
-      var st = STEPS[i], el = st.sel && document.querySelector(st.sel), vh = window.innerHeight;
-      if (el) {
-        var r = el.getBoundingClientRect(), pad = st.round ? 6 : 10;
+      var st = STEPS[i], vh = window.innerHeight, r = null;
+      // Spotlight umschließt alle genannten Elemente
+      (st.sel || []).forEach(function (q) {
+        var b = document.querySelector(q).getBoundingClientRect();
+        r = r ? { left: Math.min(r.left, b.left), top: Math.min(r.top, b.top), right: Math.max(r.right, b.right), bottom: Math.max(r.bottom, b.bottom) } : { left: b.left, top: b.top, right: b.right, bottom: b.bottom };
+      });
+      if (r) {
+        r.width = r.right - r.left; r.height = r.bottom - r.top;
+        var pad = st.round ? 6 : 10;
         spot.style.left = (r.left - pad) + 'px'; spot.style.top = (r.top - pad) + 'px';
         spot.style.width = (r.width + 2 * pad) + 'px'; spot.style.height = (r.height + 2 * pad) + 'px';
         spot.style.borderRadius = st.round ? '50%' : '22px';
         spot.classList.remove('none');
         // Karte auf die Seite, auf der mehr Platz ist (immer über „top“, damit sie gleitet statt springt)
-        var below = vh - r.bottom > r.top, ch = card.offsetHeight;
-        card.style.top = (below ? Math.min(vh - ch - 16, r.bottom + pad + 14) : Math.max(16, r.top - pad - 14 - ch)) + 'px';
+        var ch = card.offsetHeight, spaceB = vh - r.bottom - pad, spaceT = r.top - pad, need = ch + 26;
+        var top;
+        if (spaceB >= need) top = r.bottom + pad + 14;
+        else if (spaceT >= need) top = r.top - pad - 14 - ch;
+        else top = vh - ch - 12;            // kein Platz: Karte unten über dem weniger wichtigen Teil
+        card.style.top = Math.max(12, top) + 'px';
       } else {
         spot.classList.add('none');
         var cx = window.innerWidth / 2, cy = vh * 0.4;
