@@ -27,9 +27,18 @@ body { -webkit-user-select: none; user-select: none; }
 #start { gap: 24px; padding-top: calc(env(safe-area-inset-top) + 76px); }
 .lang { position: absolute; top: calc(env(safe-area-inset-top) + 20px); right: 20px; display: flex; gap: 4px; padding: 4px; border-radius: 999px;
   background: #101113; box-shadow: inset 3px 3px 7px #060607, inset -3px -3px 7px #1f2124; }
-.lang button { min-width: 48px; height: 36px; padding: 0 12px; border: 0; border-radius: 999px; background: transparent;
-  font: 800 13px 'Manrope', sans-serif; color: var(--txt2); cursor: pointer; }
-.lang button[aria-pressed="true"] { background: linear-gradient(145deg, #ff8a3d, #e8480f); box-shadow: 0 0 12px rgba(255,107,31,.45); color: #1d1f23; }
+.lang button { position: relative; z-index: 1; width: 48px; height: 36px; padding: 0; border: 0; border-radius: 999px; background: transparent;
+  font: 800 13px 'Manrope', sans-serif; color: var(--txt2); cursor: pointer; transition: color .3s ease; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.lang button[aria-pressed="true"] { color: #1d1f23; }
+/* Schiebeschalter: orangener Knopf gleitet mit leichtem Nachfedern zur anderen Seite */
+.lang-knob { position: absolute; z-index: 0; left: 4px; top: 4px; width: 48px; height: 36px; border-radius: 999px;
+  background: linear-gradient(145deg, #ff8a3d, #e8480f); box-shadow: 0 0 12px rgba(255,107,31,.45), 2px 2px 5px rgba(0,0,0,.5);
+  transition: transform .42s cubic-bezier(.34,1.45,.5,1), box-shadow .12s ease, filter .12s ease; }
+.lang.en .lang-knob { transform: translateX(52px); }
+.lang.sliding .lang-knob { animation: knobStretch .42s ease; }
+@keyframes knobStretch { 0% { scale: 1 1; } 35% { scale: 1.16 .92; } 70% { scale: .97 1.03; } 100% { scale: 1 1; } }
+.lang.pressed .lang-knob { filter: brightness(.9);
+  box-shadow: inset 2px 2px 5px rgba(110,30,0,.6), inset -2px -2px 4px rgba(255,190,140,.35), 0 0 6px rgba(255,107,31,.2); }
 .logo { width: 204px; height: 204px; flex-shrink: 0; border-radius: 50%; background: linear-gradient(145deg, #1c1e21, #101113);
   box-shadow: 14px 14px 30px #060607, -10px -10px 26px #212327; display: flex; align-items: center; justify-content: center; }
 .logo-inset { width: 170px; height: 170px; border-radius: 50%; background: #101113; box-shadow: inset 7px 7px 14px #060607, inset -5px -5px 12px #1f2124; }

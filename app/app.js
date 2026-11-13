@@ -79,6 +79,14 @@
     document.documentElement.lang = lang;
     document.querySelectorAll('[data-t]').forEach(function (el) { el.textContent = t(el.getAttribute('data-t')); });
     document.querySelectorAll('.lang button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.lang === lang ? 'true' : 'false'); });
+    var lg = $('lang'); if (lg && lg.classList.contains('en') !== (lang === 'en')) {
+      var kn = lg.querySelector('.lang-knob'), first = !lg.dataset.ready;
+      if (first) kn.style.transition = 'none';
+      lg.classList.toggle('en', lang === 'en');
+      if (first) { void kn.offsetWidth; kn.style.transition = ''; }
+      else { lg.classList.remove('sliding'); void lg.offsetWidth; lg.classList.add('sliding'); }
+    }
+    if (lg) lg.dataset.ready = '1';
     updateDataState();
   }
   document.querySelectorAll('.lang button').forEach(function (b) {
@@ -311,6 +319,7 @@
     el.addEventListener('pointerleave', function (e) { up(e, true); });
   }
   pressable($('go'), 'pressed');
+  pressable($('lang'), 'pressed');
   pressable($('medal'), 'sign-pressed', $('dial'));
   // Demo beenden: kurz warten, damit der Klick hörbar ist und das Eindrücken sichtbar wird
   pressable($('demoEnd'), 'pressed');
