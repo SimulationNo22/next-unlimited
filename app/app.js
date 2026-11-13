@@ -290,22 +290,29 @@
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + dur + 0.02);
   }
+  // sehr kurzer, klarer Ton-Anteil (der „Tick“ eines feinen Rastwerks)
+  function ping(ac, t, f, dur, gain) {
+    var o = ac.createOscillator(), g = ac.createGain();
+    o.type = 'triangle'; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * 0.82, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + 0.0008); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + dur + 0.01);
+  }
   function clickSound(down) {
     var ac = audio(); if (!ac) return;
-    var t = ac.currentTime + 0.005;
+    var t = ac.currentTime + 0.003;
     if (down) {
-      // Einrasten: satter Anschlag + kurzer heller Rastpunkt kurz danach
-      body(ac, t, 190, 85, 0.09, 0.55);
-      burst(ac, t, 1500, 1.2, 0.035, 0.9);
-      burst(ac, t + 0.012, 3600, 4, 0.012, 0.35);
+      // knackiger Klick: harter, heller Anschlag, kaum Körper – Richtung Timer-Rädchen
+      burst(ac, t, 4200, 1.6, 0.007, 1.0);
+      ping(ac, t, 2900, 0.012, 0.28);
+      body(ac, t, 420, 300, 0.012, 0.12);
     } else {
-      // Loslassen: leichteres, höheres Zurückfedern
-      body(ac, t, 260, 140, 0.05, 0.22);
-      burst(ac, t, 2400, 2, 0.018, 0.45);
+      // Loslassen: feiner, leiserer Tick
+      burst(ac, t, 5200, 2, 0.005, 0.55);
+      ping(ac, t, 3400, 0.008, 0.14);
     }
   }
   function haptic(strong) {
-    try { if (navigator.vibrate) { navigator.vibrate(strong ? 14 : 7); return; } } catch (e) {}
+    try { if (navigator.vibrate) { navigator.vibrate(strong ? 6 : 4); return; } } catch (e) {}
     // iOS (ab 18): Umschalter-Haptik über verstecktes Schalter-Feld
     try { var l = $('hapt'); if (l) l.click(); } catch (e) {}
   }
