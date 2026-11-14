@@ -264,10 +264,9 @@
     }
     if (changed || !this.uz) { this.smoothUnl(); this.ghostCache.clear(); }
   };
-  // Für die Navigation zählt ein geglätteter Zustand: kurze Stücke unter 500 m, die zwischen zwei
-  // Abschnitten des jeweils anderen Zustands liegen, werden ignoriert (kurz unbegrenzt zwischen Limits
-  // zählt nicht als Ziel; kurzes Limit mitten im Unbegrenzten unterbricht den Abschnitt nicht).
-  // Das angezeigte Tempolimit (lim) bleibt unverändert.
+  // Für die Navigation: kurze Unbegrenzt-Stücke unter 500 m zwischen zwei Limits zählen nicht als
+  // Unbegrenzt (kein Ziel, kein Unbegrenzt-Modus). Ein Limit mitten im Unbegrenzten wird dagegen NIE
+  // überbrückt – egal wie kurz, es unterbricht den Abschnitt immer. Das angezeigte Limit bleibt unverändert.
   var MIN_RUN = 500;
   Graph.prototype.smoothUnl = function () {
     var E = this.E, lim = this.lim, uz = this.uz || (this.uz = new Uint8Array(E));
@@ -276,10 +275,12 @@
     for (e = 0; e < E; e++) {
       var p = this.prev(e);
       if (p < 0 || orig[p] === orig[e]) continue;           // nur am Beginn eines Laufs
-      var st = orig[e], len = this.len[e], run = [e], g = this.next(e);
+      var st = orig[e];
+      if (st !== 1) continue;                                  // Limits werden nie überbrückt
+      var len = this.len[e], run = [e], g = this.next(e);
       while (g >= 0 && orig[g] === st && len < MIN_RUN && run.length < 300) { run.push(g); len += this.len[g]; g = this.next(g); }
       if (len >= MIN_RUN || g < 0 || orig[g] === st) continue;
-      for (var i = 0; i < run.length; i++) uz[run[i]] = 1 - st;
+      for (var i = 0; i < run.length; i++) uz[run[i]] = 0;
     }
   };
   Graph.prototype.isUnl = function (e) { return this.uz[e] === 1; };
