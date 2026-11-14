@@ -198,6 +198,9 @@ body { -webkit-user-select: none; user-select: none; }
 
 /* ---------- Tutorial ---------- */
 .tut { position: fixed; inset: 0; z-index: 50; }
+/* iOS: Bereich unterhalb des Layout-Viewports (Home-Indikator) mit abdunkeln */
+html.tut-on, html.tut-on body { background-color: #08090a; transition: background-color .3s ease; }
+.tut::after { content: ""; position: fixed; left: 0; right: 0; top: 100%; height: 400px; background: rgba(6,7,8,.78); pointer-events: none; }
 .tut-spot { position: fixed; border-radius: 22px; box-shadow: 0 0 0 200vmax rgba(6,7,8,.78), 0 0 0 2px rgba(255,138,61,.55), 0 0 24px rgba(255,107,31,.35);
   transition: left .45s cubic-bezier(.3,.7,.2,1), top .45s cubic-bezier(.3,.7,.2,1), width .45s cubic-bezier(.3,.7,.2,1), height .45s cubic-bezier(.3,.7,.2,1), border-radius .45s ease, box-shadow .4s ease; pointer-events: none; }
 .tut-spot.none { box-shadow: 0 0 0 200vmax rgba(6,7,8,.78); }
@@ -209,12 +212,13 @@ body { -webkit-user-select: none; user-select: none; }
 .tut.wait .tut-card > * { opacity: 0; }
 .tut.wait .tut-card { pointer-events: none; }
 .tut.pre .tut-card { opacity: 0; }
-.tut-k { font-size: 11px; font-weight: 800; letter-spacing: 2px; color: var(--orange, #ff6b1f); }
-.tut-h { margin: 4px 0 4px; font-size: 18px; font-weight: 800; color: #f2f3f5; }
+.tut-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.tut-k { flex: none; font-size: 11px; font-weight: 800; letter-spacing: 2px; color: var(--orange, #ff6b1f); }
+.tut-h { margin: 0 0 4px; font-size: 18px; font-weight: 800; color: #f2f3f5; }
 .tut-p { margin: 0; font-size: 14px; line-height: 1.45; color: #c4c8ce; }
-.tut-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+.tut-row { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
 .tut-skip { border: 0; background: none; padding: 8px 4px; font: 700 14px 'Manrope', sans-serif; color: var(--txt2); cursor: pointer; }
-.tut-next { border: 0; height: 42px; min-width: 120px; padding: 0 24px; border-radius: 23px; font: 800 16px 'Manrope', sans-serif; color: #1d1f23; cursor: pointer;
+.tut-next { border: 0; height: 38px; min-width: 120px; padding: 0 24px; border-radius: 23px; font: 800 16px 'Manrope', sans-serif; color: #1d1f23; cursor: pointer;
   background: linear-gradient(145deg, #ff8a3d, #e8480f); box-shadow: 0 0 16px rgba(255,107,31,.35), 4px 4px 10px rgba(0,0,0,.5);
   transition: transform .09s ease, box-shadow .12s ease, filter .12s ease; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 .tut-next.pressed { transform: scale(.96) translateY(1px); filter: brightness(.9); box-shadow: inset 3px 3px 7px rgba(110,30,0,.55), inset -2px -2px 6px rgba(255,190,140,.35); }

@@ -39,11 +39,11 @@
       demoTag: 'DEMO',
       tut: 'Tutorial', tutEnd: 'Tutorial beenden', next: 'Weiter', done: 'Fertig', skip: 'Beenden',
       tutSteps: [
-        ['Nadel & Entfernung', 'Die Nadel zeigt entlang deiner Autobahn zum nächsten Abschnitt ohne Tempolimit – sie folgt der Straße, nicht der Luftlinie. Die große Zahl: wie viele Kilometer noch.'],
+        ['Nadel & Entfernung', 'Die Nadel zeigt entlang der Autobahn zum nächsten Abschnitt ohne Tempolimit. Darunter steht, wie viele Kilometer es noch sind.'],
         ['Autobahn & Richtung', 'Oben siehst du, auf welcher Autobahn du bist und in welche Richtung du fährst. Vor einem Kreuz steht hier, wie weit es noch bis dorthin ist.'],
         ['Am Kreuz', 'Führt über ein Kreuz ein anderer Weg zu einem unbegrenzten Abschnitt, erscheinen bis zu zwei schwächere Nadeln mit ihrer Entfernung.'],
         ['Hinweis, Tempo & Limit', 'Weiß leuchtend: zeitweise gilt ein Limit, etwa nachts, bei Nässe oder per Anzeigetafel – Schilder beachten. Ausgegraut: kein solcher Hinweis. Unten: dein Tempo und das Limit laut Karte.'],
-        ['Unbegrenzt!', 'Ohne Tempolimit geht die Nadel aus, und die Striche am Rand füllen sich, je weiter du fährst. Die Zahl zeigt, wie viele Kilometer es noch unbegrenzt geht.'],
+        ['Unbegrenzt!', 'Die Nadel geht aus, die Striche füllen sich mit der gefahrenen Strecke. Darunter: wie viele Kilometer es noch unbegrenzt geht.'],
         ['Fertig', 'Starte die App vor der Fahrt, steck das Handy in die Halterung und bediene es unterwegs nicht. Gute Fahrt!']
       ]
     },
@@ -80,11 +80,11 @@
       demoTag: 'DEMO',
       tut: 'Tutorial', tutEnd: 'End tutorial', next: 'Next', done: 'Done', skip: 'Exit',
       tutSteps: [
-        ['Needle & distance', 'The needle points along your motorway to the next section without a speed limit – it follows the road, not a straight line. The big number: kilometres left.'],
+        ['Needle & distance', 'The needle points along the motorway to the next section without a speed limit. Below: how many kilometres are left.'],
         ['Motorway & direction', 'At the top you see which motorway you are on and which way you are heading. Before an interchange it shows how far away it is.'],
         ['At an interchange', 'If another route via an interchange leads to an unlimited section, up to two fainter needles appear with their distance.'],
         ['Notice, speed & limit', 'Lit white: a limit applies part of the time, e.g. at night, in the wet or via electronic signs – watch the signs. Greyed out: no such notice. At the bottom: your speed and the map’s limit.'],
-        ['Unlimited!', 'Without a speed limit the needle goes dark and the ticks around the rim fill up as you drive. The number shows how many unlimited kilometres are left.'],
+        ['Unlimited!', 'The needle goes dark and the ticks fill up as you drive through. Below: how many unlimited kilometres are left.'],
         ['Done', 'Start the app before you drive, put your phone in the holder and don’t use it on the move. Have a good drive!']
       ]
     }
@@ -807,13 +807,13 @@
       { sel: ['.top .road'], until: function (r) { return r && r.main && !r.inUnl; } },
       { sel: ['#dial'], round: true, until: function (r) { return r && !r.inUnl && r.ghosts && r.ghosts.length > 0; }, settle: 1300 },
       { sel: ['#warn', '.bottom'], until: function (r) { return r && !r.inUnl; } },
-      { sel: ['#dial', '.readout'], until: function (r) { return r && r.inUnl && r.unlDriven > 0.3 * (r.unlDriven + r.unlRemaining); }, settle: 2600 },
+      { sel: ['#dial', '.readout'], until: function (r) { return r && r.inUnl && r.unlDriven > 0.3 * (r.unlDriven + r.unlRemaining); }, settle: 350 },
       { sel: null, until: function () { return true; } }
     ];
     var i = -1, waiting = false, readyAt = 0, ov, spot, card;
     function build() {
-      ov = document.createElement('div'); ov.className = 'tut pre wait'; ov.innerHTML =
-        '<div class="tut-spot"></div><div class="tut-card raised"><div class="tut-k"></div><h3 class="tut-h"></h3><p class="tut-p"></p>' +
+      ov = document.createElement('div'); ov.className = 'tut pre wait'; document.documentElement.classList.add('tut-on'); ov.innerHTML =
+        '<div class="tut-spot"></div><div class="tut-card raised"><div class="tut-top"><h3 class="tut-h"></h3><div class="tut-k"></div></div><p class="tut-p"></p>' +
         '<div class="tut-row"><button type="button" class="tut-skip"></button><button type="button" class="tut-next"></button></div></div>';
       document.body.appendChild(ov);
       spot = ov.querySelector('.tut-spot'); card = ov.querySelector('.tut-card');
@@ -842,7 +842,7 @@
         var top;
         if (spaceB >= need) top = r.bottom + pad + 14;
         else if (spaceT >= need) top = r.top - pad - 14 - ch;
-        else top = vh - ch - 12;            // kein Platz: Karte unten über dem weniger wichtigen Teil
+        else top = Math.max(r.bottom - 6, vh - ch - 12);   // kein Platz: Karte unten, möglichst ohne das Hervorgehobene zu verdecken
         card.style.top = Math.max(12, top) + 'px';
       } else {
         spot.classList.add('none');
