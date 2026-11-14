@@ -112,12 +112,44 @@
     var mb = $('menuBtn'); if (mb) mb.setAttribute('aria-label', t('menu'));
     updateDataState();
   }
+  function setLang(l) {
+    if (l === lang) return;
+    lang = l;
+    try { localStorage.setItem('nus.lang', lang); } catch (e) {}
+    applyLang();
+  }
+  var langDragged = false;
   document.querySelectorAll('.lang button').forEach(function (b) {
-    b.addEventListener('click', function () {
-      lang = b.dataset.lang;
-      try { localStorage.setItem('nus.lang', lang); } catch (e) {}
-      applyLang();
+    b.addEventListener('click', function () { if (langDragged) return; setLang(b.dataset.lang); });
+  });
+  // Wischen: der Knopf folgt dem Finger und rastet auf der näheren Seite ein
+  document.querySelectorAll('.lang').forEach(function (lg) {
+    var kn = lg.querySelector('.lang-knob'), bs = lg.querySelectorAll('button');
+    var x0 = 0, base = 0, max = 0, active = false, moved = false, pos = 0;
+    lg.addEventListener('pointerdown', function (e) {
+      active = true; moved = false; langDragged = false; x0 = e.clientX;
+      max = bs[1].offsetLeft - bs[0].offsetLeft;
+      base = lang === 'en' ? max : 0; pos = base;
     });
+    lg.addEventListener('pointermove', function (e) {
+      if (!active) return;
+      var dx = e.clientX - x0;
+      if (!moved && Math.abs(dx) < 6) return;
+      if (!moved) { moved = true; kn.style.transition = 'none'; try { lg.setPointerCapture(e.pointerId); } catch (er) {} }
+      pos = Math.max(0, Math.min(max, base + dx));
+      kn.style.transform = 'translateX(' + pos + 'px)';
+    });
+    function end(cancel) {
+      if (!active) return; active = false;
+      if (!moved) return;
+      langDragged = true; setTimeout(function () { langDragged = false; }, 50);
+      var target = pos > max / 2 ? 'en' : 'de';
+      void kn.offsetWidth; kn.style.transition = '';
+      if (!cancel && target !== lang) setLang(target);
+      void kn.offsetWidth; kn.style.transform = '';   // gleitet von der Fingerposition aus in die Raste
+    }
+    lg.addEventListener('pointerup', function () { end(false); });
+    lg.addEventListener('pointercancel', function () { end(true); });
   });
 
   function fmtKm(m) {
