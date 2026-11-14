@@ -11,6 +11,7 @@
       notice: 'HINWEIS',
       p1: 'Beachte immer die Verkehrsregeln und die Beschilderung vor Ort. Die App dient nur zur Information und ersetzt nicht deine Verantwortung als Fahrer.',
       p2: 'Bitte vor der Fahrt starten und das Handy in die Halterung stecken – während der Fahrt nicht bedienen.',
+      p3: 'Die Anzeige funktioniert nur auf der Autobahn – starten kannst du die App aber schon vorher.',
       dataCached: 'Autobahndaten offline gespeichert',
       asOf: 'Stand',
       dataLater: 'Autobahndaten werden nach dem Start geladen',
@@ -25,7 +26,7 @@
       waitGps: 'Warte auf GPS …',
       gpsDenied: 'Kein Standortzugriff – bitte in den Einstellungen erlauben',
       move: 'Losfahren, um die Richtung zu erkennen',
-      offroad: 'Keine Autobahn erkannt',
+      offroad: 'Nur auf der Autobahn – startet, sobald du auf einer fährst',
       noTarget: 'Kein Unbegrenzt-Abschnitt in Reichweite',
       dataError: 'Daten konnten nicht geladen werden – Verbindung prüfen',
       kreuz: 'Autobahnkreuz', in: 'in',
@@ -40,7 +41,7 @@
       demoTag: 'DEMO',
       tut: 'Tutorial', tutEnd: 'Tutorial beenden', next: 'Weiter', done: 'Fertig', skip: 'Beenden',
       tutSteps: [
-        ['Nadel & Entfernung', 'Die Nadel zeigt entlang der Autobahn zum nächsten Abschnitt ohne Tempolimit. Darunter steht, wie viele Kilometer es noch sind.'],
+        ['Nadel & Entfernung', 'Auf der Autobahn zeigt die Nadel entlang der Strecke zum nächsten Abschnitt ohne Tempolimit. Darunter: wie viele Kilometer noch.'],
         ['Autobahn & Richtung', 'Oben siehst du, auf welcher Autobahn du bist und in welche Richtung du fährst. Vor einem Kreuz steht hier, wie weit es noch bis dorthin ist.'],
         ['Am Kreuz', 'Führt über ein Kreuz ein anderer Weg zu einem unbegrenzten Abschnitt, erscheinen bis zu zwei schwächere Nadeln mit ihrer Entfernung.'],
         ['Kontrollleuchten & Tempo', 'Links leuchtet „Zeitweise begrenzt“, wenn nur zeitweise ein Limit gilt – nachts, bei Nässe oder per Anzeigetafel. Rechts der GPS-Empfang: grün gut, gelb schwach, rot kein Signal. Unten: dein Tempo und das Limit laut Karte.'],
@@ -53,6 +54,7 @@
       notice: 'NOTICE',
       p1: 'Always follow traffic rules and the signs on the road. This app is for information only and does not replace your responsibility as a driver.',
       p2: 'Start before you drive and put your phone in its mount – do not use it while driving.',
+      p3: 'The display only works on the Autobahn – but you can start the app beforehand.',
       dataCached: 'Autobahn data saved offline',
       asOf: 'as of',
       dataLater: 'Autobahn data loads after you start',
@@ -67,7 +69,7 @@
       waitGps: 'Waiting for GPS …',
       gpsDenied: 'No location access – please allow it in settings',
       move: 'Start driving to detect your direction',
-      offroad: 'No Autobahn detected',
+      offroad: 'Autobahn only – starts as soon as you drive on one',
       noTarget: 'No unlimited section in range',
       dataError: 'Could not load data – check your connection',
       kreuz: 'Interchange', in: 'in',
@@ -82,7 +84,7 @@
       demoTag: 'DEMO',
       tut: 'Tutorial', tutEnd: 'End tutorial', next: 'Next', done: 'Done', skip: 'Exit',
       tutSteps: [
-        ['Needle & distance', 'The needle points along the motorway to the next section without a speed limit. Below: how many kilometres are left.'],
+        ['Needle & distance', 'On the Autobahn the needle points along the road to the next section without a speed limit. Below: kilometres left.'],
         ['Motorway & direction', 'At the top you see which motorway you are on and which way you are heading. Before an interchange it shows how far away it is.'],
         ['At an interchange', 'If another route via an interchange leads to an unlimited section, up to two fainter needles appear with their distance.'],
         ['Lamps & speed', 'On the left, “Temporary limit” lights up when a limit applies only at times – at night, in the wet or via electronic signs. On the right, GPS reception: green good, amber weak, red no signal. Below: your speed and the map’s limit.'],
@@ -326,7 +328,9 @@
   // ---------- Kopfzeile: Kreuz als „AK in 3,9 km“ + Name, sonst Himmelsrichtung ----------
   var DIRTXT = '', KREUZ_ON = false, lastKreuzKey = '';
   function kreuzParts(name) {
-    var n = (name || '').trim(), ab = 'AK';
+    var parts = (name || '').split(';').map(function (x) { return x.trim(); }).filter(Boolean);
+    var pick = parts.filter(function (x) { return /kreuz|dreieck/i.test(x); })[0] || parts[0] || '';
+    var n = pick, ab = 'AK';
     var m = n.match(/^(Autobahn)?(kreuz|dreieck)\s+/i);
     if (m) { ab = /dreieck/i.test(m[2]) ? 'AD' : 'AK'; n = n.slice(m[0].length); }
     else if (/^(AK|AD)\s+/.test(n)) { ab = n.slice(0, 2); n = n.slice(3); }
@@ -491,7 +495,7 @@
     if (show) {
       n.target = angle;
       n.lbl.textContent = text;
-    }
+    } else if (toTop) n.target = 0;   // erst in die Nullstellung oben fahren, dort ausgehen
     n.g.classList.toggle('off', !show);
     if (was && !show) { n.g.classList.remove('cooling'); void n.g.getBoundingClientRect(); n.g.classList.add('cooling'); }
     if (show) n.g.classList.remove('cooling');
@@ -499,6 +503,30 @@
     n.glow.style.opacity = show ? n.glowOp : 0;
     if (n.refl) n.refl.style.opacity = show ? n.reflOp : 0;
     if (n.floor) n.floor.style.opacity = show ? n.floorOp : 0;
+  }
+
+  // Nadeln mit Mindestabstand, damit sich Nadeln und km-Angaben nie überlagern.
+  // Die Hauptnadel bleibt exakt; nur die Nebennadeln werden bei Bedarf zur Seite geschoben.
+  var MIN_SEP = 30;
+  function spread(a) {
+    var out = a.slice(), fixed = [out[0] != null, false, false];
+    for (var it = 0; it < 30; it++) {
+      var moved = false;
+      for (var i = 0; i < 3; i++) for (var j = i + 1; j < 3; j++) {
+        if (out[i] == null || out[j] == null) continue;
+        var d = E.angDiff(out[i], out[j]);           // j relativ zu i
+        if (Math.abs(d) >= MIN_SEP - 0.01) continue;
+        var dir = d === 0 ? (j === 1 ? -1 : 1) : (d > 0 ? 1 : -1), need = MIN_SEP - Math.abs(d);
+        if (fixed[i] && fixed[j]) continue;
+        if (fixed[i]) out[j] += dir * need;
+        else if (fixed[j]) out[i] -= dir * need;
+        else { out[i] -= dir * need / 2; out[j] += dir * need / 2; }
+        moved = true;
+      }
+      if (!moved) break;
+    }
+    for (var k = 0; k < 3; k++) if (out[k] != null) out[k] = ((out[k] + 540) % 360) - 180;
+    return out;
   }
 
   function setStatus(msg) {
@@ -591,8 +619,10 @@
     dial.classList.remove('is-unl');
     $('ringGroup').classList.add('off');
     if (U.active) leaveUnl();
+    var gh = res.ghosts || [];
+    var ang = spread([res.main ? E.angDiff(H, res.main.brg) : null, gh[0] ? E.angDiff(H, gh[0].brg) : null, gh[1] ? E.angDiff(H, gh[1].brg) : null]);
     if (res.main) {
-      setNeedle(0, true, E.angDiff(H, res.main.brg), fmtKm(res.main.dist) + ' km');
+      setNeedle(0, true, ang[0], fmtKm(res.main.dist) + ' km');
       $('bigPre').textContent = '';
       $('bigNum').textContent = fmtKm(res.main.dist);
       $('bigLabel').textContent = t('toNext');
@@ -601,10 +631,9 @@
       setNeedle(0, false);
       setStatus(t('noTarget'));
     }
-    var gh = res.ghosts || [];
     for (var j = 0; j < 2; j++) {
       var g = gh[j];
-      if (g) setNeedle(j + 1, true, E.angDiff(H, g.brg), fmtKm(g.dist) + ' km');
+      if (g) setNeedle(j + 1, true, ang[j + 1], fmtKm(g.dist) + ' km');
       else setNeedle(j + 1, false);
     }
     // Kreuz-Hinweis steht in der Kopfzeile statt der Himmelsrichtung
