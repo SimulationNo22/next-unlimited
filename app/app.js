@@ -33,7 +33,8 @@
       left: 'links', right: 'rechts', ahead: 'geradeaus',
       started: 'Beginn · {d} gefahren',
       endsIn: 'Ende in {d}',
-      warn: 'Zeitweise begrenzt – Schilder beachten',
+      warn: 'Zeitweise begrenzt – Schilder beachten', warnShort: 'Zeitweise begrenzt', demoItem: 'Demo-Fahrt', langItem: 'Sprache', menu: 'Menü',
+      gpsOk: 'GPS', gpsWeak: 'GPS schwach', gpsNone: 'Kein GPS',
       dir: 'Richtung',
       winds: ['Norden', 'Nordosten', 'Osten', 'Südosten', 'Süden', 'Südwesten', 'Westen', 'Nordwesten'],
       demoTag: 'DEMO',
@@ -42,9 +43,9 @@
         ['Nadel & Entfernung', 'Die Nadel zeigt entlang der Autobahn zum nächsten Abschnitt ohne Tempolimit. Darunter steht, wie viele Kilometer es noch sind.'],
         ['Autobahn & Richtung', 'Oben siehst du, auf welcher Autobahn du bist und in welche Richtung du fährst. Vor einem Kreuz steht hier, wie weit es noch bis dorthin ist.'],
         ['Am Kreuz', 'Führt über ein Kreuz ein anderer Weg zu einem unbegrenzten Abschnitt, erscheinen bis zu zwei schwächere Nadeln mit ihrer Entfernung.'],
-        ['Hinweis, Tempo & Limit', 'Weiß leuchtend: zeitweise gilt ein Limit, etwa nachts, bei Nässe oder per Anzeigetafel – Schilder beachten. Ausgegraut: kein solcher Hinweis. Unten: dein Tempo und das Limit laut Karte.'],
+        ['Kontrollleuchten & Tempo', 'Links leuchtet „Zeitweise begrenzt“, wenn nur zeitweise ein Limit gilt – nachts, bei Nässe oder per Anzeigetafel. Rechts der GPS-Empfang: grün gut, gelb schwach, rot kein Signal. Unten: dein Tempo und das Limit laut Karte.'],
         ['Unbegrenzt!', 'Die Nadel geht aus, die Striche füllen sich mit der gefahrenen Strecke. Darunter: wie viele Kilometer es noch unbegrenzt geht.'],
-        ['Fertig', 'Starte die App vor der Fahrt, steck das Handy in die Halterung und bediene es unterwegs nicht. Gute Fahrt!']
+        ['Menü', 'Hier oben findest du jederzeit dieses Tutorial, die Demo-Fahrt und die Sprache. Starte die App vor der Fahrt und bediene sie unterwegs nicht. Gute Fahrt!']
       ]
     },
     en: {
@@ -74,7 +75,8 @@
       left: 'left', right: 'right', ahead: 'ahead',
       started: 'Start · {d} driven',
       endsIn: 'Ends in {d}',
-      warn: 'Limits at times – watch the signs',
+      warn: 'Limits at times – watch the signs', warnShort: 'Temporary limit', demoItem: 'Demo drive', langItem: 'Language', menu: 'Menu',
+      gpsOk: 'GPS', gpsWeak: 'Weak GPS', gpsNone: 'No GPS',
       dir: 'Heading',
       winds: ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest'],
       demoTag: 'DEMO',
@@ -83,9 +85,9 @@
         ['Needle & distance', 'The needle points along the motorway to the next section without a speed limit. Below: how many kilometres are left.'],
         ['Motorway & direction', 'At the top you see which motorway you are on and which way you are heading. Before an interchange it shows how far away it is.'],
         ['At an interchange', 'If another route via an interchange leads to an unlimited section, up to two fainter needles appear with their distance.'],
-        ['Notice, speed & limit', 'Lit white: a limit applies part of the time, e.g. at night, in the wet or via electronic signs – watch the signs. Greyed out: no such notice. At the bottom: your speed and the map’s limit.'],
+        ['Lamps & speed', 'On the left, “Temporary limit” lights up when a limit applies only at times – at night, in the wet or via electronic signs. On the right, GPS reception: green good, amber weak, red no signal. Below: your speed and the map’s limit.'],
         ['Unlimited!', 'The needle goes dark and the ticks fill up as you drive through. Below: how many unlimited kilometres are left.'],
-        ['Done', 'Start the app before you drive, put your phone in the holder and don’t use it on the move. Have a good drive!']
+        ['Menu', 'Up here you can always find this tutorial, the demo drive and the language. Start the app before you drive and don’t use it on the move. Have a good drive!']
       ]
     }
   };
@@ -97,14 +99,17 @@
     document.documentElement.lang = lang;
     document.querySelectorAll('[data-t]').forEach(function (el) { el.textContent = t(el.getAttribute('data-t')); });
     document.querySelectorAll('.lang button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.lang === lang ? 'true' : 'false'); });
-    var lg = $('lang'); if (lg && lg.classList.contains('en') !== (lang === 'en')) {
-      var kn = lg.querySelector('.lang-knob'), first = !lg.dataset.ready;
-      if (first) kn.style.transition = 'none';
-      lg.classList.toggle('en', lang === 'en');
-      if (first) { void kn.offsetWidth; kn.style.transition = ''; }
-      else { lg.classList.remove('sliding'); void lg.offsetWidth; lg.classList.add('sliding'); }
-    }
-    if (lg) lg.dataset.ready = '1';
+    document.querySelectorAll('.lang').forEach(function (lg) {
+      if (lg.classList.contains('en') !== (lang === 'en')) {
+        var kn = lg.querySelector('.lang-knob'), first = !lg.dataset.ready;
+        if (first) kn.style.transition = 'none';
+        lg.classList.toggle('en', lang === 'en');
+        if (first) { void kn.offsetWidth; kn.style.transition = ''; }
+        else { lg.classList.remove('sliding'); void lg.offsetWidth; lg.classList.add('sliding'); }
+      }
+      lg.dataset.ready = '1';
+    });
+    var mb = $('menuBtn'); if (mb) mb.setAttribute('aria-label', t('menu'));
     updateDataState();
   }
   document.querySelectorAll('.lang button').forEach(function (b) {
@@ -380,17 +385,39 @@
   }
   pressable($('go'), 'pressed');
   pressable($('lang'), 'pressed');
+  pressable($('lang2'), 'pressed');
   // Demo beenden: kurz warten, damit der Klick hörbar ist und das Eindrücken sichtbar wird
   pressable($('demoEnd'), 'pressed');
   $('demoEnd').addEventListener('click', function (e) {
-    e.preventDefault(); var href = this.href; setTimeout(function () { location.href = href; }, 160);
+    e.preventDefault(); if (TUT) markTutDone(); var href = this.href; setTimeout(function () { location.href = href; }, 160);
   });
+
+  // ---------- Menü ----------
+  function setMenu(open) {
+    document.body.classList.toggle('menu-open', open);
+    $('menuBtn').classList.toggle('open', open);
+    $('menuBtn').setAttribute('aria-expanded', open ? 'true' : 'false');
+    $('menu').setAttribute('aria-hidden', open ? 'false' : 'true');
+  }
+  pressable($('menuBtn'), 'pressed');
+  $('menuBtn').addEventListener('click', function () { setMenu(!document.body.classList.contains('menu-open')); });
+  $('menuScrim').addEventListener('click', function () { setMenu(false); });
+  ['miTut', 'miDemo'].forEach(function (id) {
+    pressable($(id), 'pressed');
+    $(id).addEventListener('click', function (e) { e.preventDefault(); var href = this.href; setTimeout(function () { location.href = href; }, 160); });
+  });
+
+  // Tutorial nur beim ersten Start automatisch
+  function tutDone() { try { return localStorage.getItem('nus.tutDone') === '1'; } catch (e) { return true; } }
+  function markTutDone() { try { localStorage.setItem('nus.tutDone', '1'); } catch (e) {} }
+  function leave() { if (TUT) markTutDone(); setTimeout(function () { location.href = './?start'; }, 120); }
 
   // ---------- Start ----------
   function isStandalone() {
     return (window.matchMedia && (matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches)) || navigator.standalone === true;
   }
   $('go').addEventListener('click', function () {
+    if (!DEMO && !tutDone()) { TUT = DEMO = true; enterDemoUI(); }
     keepAwake();
     var de = document.documentElement;
     if (!isStandalone() && de.requestFullscreen) { try { de.requestFullscreen({ navigationUI: 'hide' }).catch(function () {}); } catch (e) {} }
@@ -455,7 +482,9 @@
   function render(res) {
     // Kopfzeile
     var acc = S.pos ? S.pos.acc : null;
-    $('gpsDot').className = 'dot' + (acc == null ? '' : acc <= 25 ? ' ok' : acc <= 60 ? ' weak' : '');
+    var gs = acc == null || acc > 60 ? 'off' : acc <= 25 ? 'ok' : 'weak';
+    $('gpsLamp').className = 'tt gps-' + gs;
+    $('gpsText').textContent = t(gs === 'ok' ? 'gpsOk' : gs === 'weak' ? 'gpsWeak' : 'gpsNone');
     $('speed').textContent = S.speed != null ? Math.round(S.speed * 3.6) : '--';
     var winds = t('winds');
     DIRTXT = S.heading != null ? t('dir') + ' ' + winds[Math.round(S.heading / 45) % 8] : '';
@@ -476,7 +505,7 @@
     var warn = $('warn');
     var hideAll = function () {
       for (var i = 0; i < 3; i++) setNeedle(i, false);
-      warn.classList.add('idle'); $('warnText').textContent = t('warn');
+      warn.classList.add('idle'); $('warnText').textContent = t('warnShort');
       $('ringGroup').classList.add('off');
       dial.classList.remove('is-unl');
       if (U.active) leaveUnl();
@@ -522,7 +551,7 @@
       $('bigLabel').textContent = t('unlimited');
       $('bigLabel').className = 'label hot';
       warn.classList.toggle('idle', !res.unlCond);
-      $('warnText').textContent = t('warn');
+      $('warnText').textContent = t('warnShort');
       return;
     }
 
@@ -550,7 +579,7 @@
     if (gh.length && res.kreuz) setKreuz(res.kreuz); else clearKreuz();
     var showWarn = !!(res.main && res.main.cond);
     warn.classList.toggle('idle', !showWarn);
-    $('warnText').textContent = t('warn');
+    $('warnText').textContent = t('warnShort');
   }
 
   // ---------- Übergang in den Unbegrenzt-Modus ----------
@@ -841,9 +870,9 @@
       { sel: ['#dial', '.readout'], until: function (r) { return r && r.main && !r.inUnl; } },
       { sel: ['.top .road'], until: function (r) { return r && r.main && !r.inUnl; } },
       { sel: ['#dial'], round: true, until: function (r) { return r && !r.inUnl && r.ghosts && r.ghosts.length > 0; }, settle: 1300 },
-      { sel: ['#warn', '.bottom'], until: function (r) { return r && !r.inUnl; } },
+      { sel: ['#lamps', '.bottom'], until: function (r) { return r && !r.inUnl && r.main && r.main.cond; } },
       { sel: ['#dial', '.readout'], until: function (r) { return r && r.inUnl && r.unlDriven > 0.3 * (r.unlDriven + r.unlRemaining); }, settle: 350 },
-      { sel: null, until: function () { return true; } }
+      { sel: ['#menuBtn'], round: true, until: function () { return true; } }
     ];
     var i = -1, waiting = false, readyAt = 0, ov, spot, card;
     function build() {
@@ -854,7 +883,7 @@
       spot = ov.querySelector('.tut-spot'); card = ov.querySelector('.tut-card');
       pressable(ov.querySelector('.tut-next'), 'pressed');
       ov.querySelector('.tut-next').addEventListener('click', next);
-      ov.querySelector('.tut-skip').addEventListener('click', function () { setTimeout(function () { location.href = './'; }, 120); });
+      ov.querySelector('.tut-skip').addEventListener('click', leave);
       window.addEventListener('resize', place);
     }
     function place() {
@@ -900,7 +929,7 @@
     }
     function next() {
       if (waiting) return;
-      if (i === STEPS.length - 1) { setTimeout(function () { location.href = './'; }, 120); return; }
+      if (i === STEPS.length - 1) { leave(); return; }
       i++; waiting = true;
       ov.classList.add('wait');           // Karte blendet aus, die Anzeige springt sofort zur passenden Stelle
       var st = STEPS[i];
@@ -944,8 +973,16 @@
   if (isIOS && !isStandalone()) $('iosHint').classList.remove('hidden');
   if (RINGMODE === 'ticks') $('dial').classList.add('ticks');
   if (!REFLECT) { $('reflect').style.display = 'none'; ['floor0', 'floor1', 'floor2'].forEach(function (id) { $(id).style.display = 'none'; }); }
-  if (DEMO) { $('demoLink').classList.add('hidden'); $('tutLink').classList.add('hidden'); $('demoEnd').classList.remove('hidden'); document.querySelector('.top').classList.add('demo'); }
-  if (TUT) { $('demoEnd').setAttribute('data-t', 'tutEnd'); $('demoEnd').textContent = t('tutEnd'); $('dataState').textContent = t('tut'); }
+  function enterDemoUI() {
+    $('demoEnd').classList.remove('hidden'); document.querySelector('.top').classList.add('demo');
+    if (TUT) { document.querySelector('.top').classList.add('is-tut'); $('demoEnd').setAttribute('data-t', 'tutEnd'); $('demoEnd').textContent = t('tutEnd'); }
+  }
+  if (DEMO) { enterDemoUI(); if (TUT) $('dataState').textContent = t('tut'); }
+  // aus dem Menü oder nach Demo/Tutorial: direkt losfahren, ohne erneuten Hinweis
+  if (/[?&]start/.test(location.search)) {
+    try { history.replaceState(null, '', DEMO ? location.pathname + (TUT ? '?tutorial' : '?demo') : location.pathname); } catch (e) {}
+    setTimeout(function () { $('go').click(); }, 0);
+  }
   idbGet('de').then(function (c) {
     if (c) { hasCache = true; S.dataVersion = c.version; updateDataState(); }
     else idbGet('region').then(function (r) { hasCache = !!r; updateDataState(); });

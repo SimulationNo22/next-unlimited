@@ -69,9 +69,12 @@ body { -webkit-user-select: none; user-select: none; }
 
 /* ---------- Fahrt ---------- */
 /* oben mehr Abstand, damit nichts unter dem Statusleisten-Verlauf des iPhones liegt; Rest gleichmäßig verteilt */
-#drive { gap: 6px; justify-content: space-between; padding: max(14px, calc(env(safe-area-inset-top) + 22px)) 22px calc(env(safe-area-inset-bottom) + 6px); min-height: 100dvh; }
+#drive { gap: 6px; justify-content: space-between; padding: max(14px, calc(env(safe-area-inset-top) + 22px)) 22px calc(env(safe-area-inset-bottom) + 14px); min-height: 100dvh; }
 .vh { visibility: hidden; opacity: 0; }
-.info { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.info { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 0; --gap: 22px; }
+/* gleiche Abstände: Beschriftung → Leiste → Tempo. Die Beschriftung hat Platz für 2 Zeilen (19px), daher der Ausgleich. */
+.info .lamps { margin-top: calc(var(--gap) - 23px); }
+.info .bottom { margin-top: var(--gap); }
 .unl { transition: opacity .5s ease, visibility .5s; }
 .warn, .warn span, .warn svg { transition: color .5s ease, opacity .5s ease, filter .5s ease; }
 .warn.idle { color: #4d5056; }                       /* nicht aktiv: ausgegraut, bleibt aber an seinem Platz */
@@ -227,3 +230,46 @@ html.tut-on, html.tut-on body { background-color: #08090a; transition: backgroun
   background: linear-gradient(145deg, #ff8a3d, #e8480f); box-shadow: 0 0 16px rgba(255,107,31,.35), 4px 4px 10px rgba(0,0,0,.5);
   transition: transform .09s ease, box-shadow .12s ease, filter .12s ease; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 .tut-next.pressed { transform: scale(.96) translateY(1px); filter: brightness(.9); box-shadow: inset 3px 3px 7px rgba(110,30,0,.55), inset -2px -2px 6px rgba(255,190,140,.35); }
+
+/* ---------- Kontrollleuchten-Leiste (Hinweis links, GPS rechts) ---------- */
+.lamps { width: 100%; height: 42px; display: flex; align-items: center; justify-content: space-between; padding: 0 6px; border-radius: 16px;
+  background: #0c0d0f; box-shadow: inset 5px 5px 11px #050506, inset -4px -4px 10px #1d1f23; }
+.tt { --c: #ffb347; display: flex; align-items: center; gap: 8px; padding: 0 8px; height: 32px; min-width: 0; }
+.tt span { font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: var(--c); text-shadow: 0 0 8px var(--c); transition: color .5s ease, text-shadow .5s ease; }
+.tt svg { flex: none; filter: drop-shadow(0 0 3px var(--c)) drop-shadow(0 0 8px var(--c)); transition: filter .5s ease, opacity .5s ease; }
+/* aus: wie ein graviertes, unbeleuchtetes Symbol */
+.tt.idle span { color: #3c3f45; text-shadow: none; }
+.tt.idle svg { opacity: .18; filter: none; }
+#gpsLamp.gps-ok { --c: #4ade80; }
+#gpsLamp.gps-weak { --c: #ffb347; }
+#gpsLamp.gps-off { --c: #ff5a4f; }
+
+/* ---------- Menü ---------- */
+.burger { position: relative; flex: none; width: 40px; height: 40px; border-radius: 50%; border: 0; padding: 0; cursor: pointer;
+  background: linear-gradient(145deg, #1f2125, #16171a); box-shadow: 4px 4px 10px #060607, -3px -3px 8px #24262b;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation; transition: box-shadow .12s ease, transform .09s ease; }
+.burger.pressed, .burger.open { box-shadow: inset 3px 3px 7px #060607, inset -2px -2px 6px #24262b; }
+.burger.pressed { transform: scale(.96); }
+.burger i { position: absolute; left: 12px; width: 16px; height: 2px; border-radius: 1px; background: #c4c8ce; transition: transform .3s cubic-bezier(.3,.7,.2,1), opacity .2s ease, top .3s cubic-bezier(.3,.7,.2,1); }
+.burger i:nth-child(1) { top: 14px; } .burger i:nth-child(2) { top: 19px; } .burger i:nth-child(3) { top: 24px; }
+.burger.open i:nth-child(1) { top: 19px; transform: rotate(45deg); }
+.burger.open i:nth-child(2) { opacity: 0; }
+.burger.open i:nth-child(3) { top: 19px; transform: rotate(-45deg); }
+.top.demo .burger { display: none; }
+.top.is-tut .burger { display: block; }
+.top.is-tut .demo-end { display: none; }
+.menu-scrim { position: fixed; inset: 0; z-index: 30; background: rgba(6,7,8,.6); opacity: 0; pointer-events: none; transition: opacity .3s ease; }
+.menu { position: fixed; z-index: 31; right: 18px; top: calc(max(14px, env(safe-area-inset-top) + 22px) + 50px); width: 240px; padding: 8px; border-radius: 22px;
+  background: linear-gradient(160deg, #1f2125, #15161a); box-shadow: 10px 10px 24px #050506, -6px -6px 16px #202227;
+  transform-origin: 92% -6%; transform: scale(.85); opacity: 0; pointer-events: none; transition: transform .35s cubic-bezier(.3,1.3,.5,1), opacity .2s ease; }
+body.menu-open .menu-scrim { opacity: 1; pointer-events: auto; }
+body.menu-open .menu { transform: scale(1); opacity: 1; pointer-events: auto; }
+.menu .item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 14px; font-size: 15px; font-weight: 700; color: #e4e6ea; text-decoration: none; -webkit-tap-highlight-color: transparent; }
+.menu a.item:active { box-shadow: inset 2px 2px 6px #08090a, inset -2px -2px 5px #26282d; }
+.menu .item svg { width: 20px; height: 20px; flex: none; stroke: #ff8a3d; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.menu .sep { height: 1px; margin: 6px 10px; background: #26282d; }
+.lang.mini { position: relative; top: auto; right: auto; gap: 0; margin-left: auto; padding: 3px; }
+.lang.mini button { width: 38px; height: 28px; font-size: 12px; }
+.lang.mini .lang-knob { left: 3px; top: 3px; width: 38px; height: 28px; }
+.lang.mini.en .lang-knob { transform: translateX(38px); }

@@ -65,7 +65,6 @@
 
   <p id="iosHint" class="ioshint hidden" data-t="iosHint"></p>
   <button type="button" id="go" class="go">OK, let’s go</button>
-  <div class="links"><a id="demoLink" class="demolink" href="?demo" data-t="demo"></a><a id="tutLink" class="demolink" href="?tutorial" data-t="tut"></a></div>
 </section>
 
 <!-- ============ FAHRT ============ -->
@@ -75,9 +74,18 @@
       <span id="ref" class="badge">A</span>
       <span id="dirText"></span>
     </div>
-    <div class="gps inset-pill"><span id="gpsDot" class="dot"></span>GPS</div>
-    <a id="demoEnd" class="demo-end hidden" href="./" data-t="demoEnd"></a>
+    <button type="button" id="menuBtn" class="burger" aria-label="Menü" aria-expanded="false"><i></i><i></i><i></i></button>
+    <a id="demoEnd" class="demo-end hidden" href="./?start" data-t="demoEnd"></a>
   </header>
+  <div id="menuScrim" class="menu-scrim"></div>
+  <nav id="menu" class="menu" aria-hidden="true">
+    <a class="item" id="miTut" href="?tutorial&amp;start"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.6 2.6 0 0 1 5 .9c0 1.7-2.5 2.2-2.5 3.9"/><path d="M12 17.2h.01"/></svg><span data-t="tut"></span></a>
+    <a class="item" id="miDemo" href="?demo&amp;start"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 8.5v7l5.5-3.5z"/></svg><span data-t="demoItem"></span></a>
+    <div class="sep"></div>
+    <div class="item static"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.8 3 2.8 15 0 18M12 3c-2.8 3-2.8 15 0 18"/></svg><span data-t="langItem"></span>
+      <div class="lang mini" id="lang2" role="group" aria-label="Sprache / Language"><span class="lang-knob" aria-hidden="true"></span><button type="button" data-lang="de">DE</button><button type="button" data-lang="en">EN</button></div>
+    </div>
+  </nav>
 
   <div class="dial" id="dial">
     <div class="d-outer"></div>
@@ -153,16 +161,15 @@
   </div>
 
 
-  <div id="warn" class="warn inset idle">
-    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 L22 20 H2 Z" fill="none" stroke="#ffb347" stroke-width="2" stroke-linejoin="round"/><path d="M12 10 V14" stroke="#ffb347" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1.2" fill="#ffb347"/></svg>
-    <span id="warnText"></span>
-  </div>
-
+  <div id="lamps" class="lamps">
+    <div id="warn" class="tt idle"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 L22 20 H2 Z" fill="none" stroke="var(--c)" stroke-width="2" stroke-linejoin="round"/><path d="M12 10 V14" stroke="var(--c)" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1.2" fill="var(--c)"/></svg><span id="warnText"></span></div>
+    <div id="gpsLamp" class="tt gps-off"><span id="gpsText">GPS</span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--c)" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="2.6" fill="var(--c)" stroke="none"/><path d="M7.2 7.2a6.8 6.8 0 0 0 0 9.6M16.8 7.2a6.8 6.8 0 0 1 0 9.6"/><path d="M4.3 4.3a10.9 10.9 0 0 0 0 15.4M19.7 4.3a10.9 10.9 0 0 1 0 15.4"/></svg></div>
   </div>
 
   <div class="bottom raised">
     <div class="speed"><span id="speed">--</span><span class="u">km/h</span></div>
     <div class="limit"><span class="l-lbl">Limit</span><span id="limitSign" class="limitsign none-known">–</span></div>
+  </div>
   </div>
 </section>
 
