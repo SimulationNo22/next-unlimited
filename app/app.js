@@ -28,7 +28,7 @@
       offroad: 'Keine Autobahn erkannt',
       noTarget: 'Kein Unbegrenzt-Abschnitt in Reichweite',
       dataError: 'Daten konnten nicht geladen werden – Verbindung prüfen',
-      kreuz: 'Autobahnkreuz',
+      kreuz: 'Autobahnkreuz', in: 'in',
       inDist: 'in',
       left: 'links', right: 'rechts', ahead: 'geradeaus',
       started: 'Beginn · {d} gefahren',
@@ -69,7 +69,7 @@
       offroad: 'No Autobahn detected',
       noTarget: 'No unlimited section in range',
       dataError: 'Could not load data – check your connection',
-      kreuz: 'Interchange',
+      kreuz: 'Interchange', in: 'in',
       inDist: 'in',
       left: 'left', right: 'right', ahead: 'ahead',
       started: 'Start · {d} driven',
@@ -286,6 +286,40 @@
     if (document.visibilityState === 'visible' && $('drive').classList.contains('active')) keepAwake();
   });
 
+  // ---------- Kopfzeile: Kreuz als „AK in 3,9 km“ + Name, sonst Himmelsrichtung ----------
+  var DIRTXT = '', KREUZ_ON = false, lastKreuzKey = '';
+  function kreuzParts(name) {
+    var n = (name || '').trim(), ab = 'AK';
+    var m = n.match(/^(Autobahn)?(kreuz|dreieck)\s+/i);
+    if (m) { ab = /dreieck/i.test(m[2]) ? 'AD' : 'AK'; n = n.slice(m[0].length); }
+    else if (/^(AK|AD)\s+/.test(n)) { ab = n.slice(0, 2); n = n.slice(3); }
+    return { ab: ab, name: n };
+  }
+  function setKreuz(k) {
+    var p = kreuzParts(k.name), sub = p.ab + ' ' + t('in') + ' ' + fmtKm(k.dist) + ' km';
+    var key = sub + '|' + p.name;
+    if (key === lastKreuzKey) return;
+    lastKreuzKey = key;
+    var el = $('dirText');
+    if (!p.name) { el.innerHTML = ''; el.textContent = sub; KREUZ_ON = true; el.classList.remove('two', 'small'); return; }
+    el.innerHTML = '<span class="dt-sub"></span><span class="dt-main"></span>';
+    el.querySelector('.dt-sub').textContent = sub;
+    el.querySelector('.dt-main').textContent = p.name;
+    el.classList.add('two'); el.classList.remove('small');
+    var main = el.querySelector('.dt-main');
+    if (main.scrollWidth > main.clientWidth + 1) el.classList.add('small');
+    if (main.scrollWidth > main.clientWidth + 1) {
+      // passt auch verkleinert nicht: nur Autobahn + Fahrtrichtung zeigen
+      el.classList.remove('two', 'small'); el.textContent = DIRTXT; KREUZ_ON = false; return;
+    }
+    KREUZ_ON = true;
+  }
+  function clearKreuz() {
+    if (!KREUZ_ON && !lastKreuzKey) return;
+    KREUZ_ON = false; lastKreuzKey = '';
+    var el = $('dirText'); el.classList.remove('two', 'small'); el.textContent = DIRTXT;
+  }
+
   // ---------- Druckschalter: Klang + Haptik ----------
   var AC = null;
   function audio() {
@@ -424,7 +458,8 @@
     $('gpsDot').className = 'dot' + (acc == null ? '' : acc <= 25 ? ' ok' : acc <= 60 ? ' weak' : '');
     $('speed').textContent = S.speed != null ? Math.round(S.speed * 3.6) : '--';
     var winds = t('winds');
-    $('dirText').textContent = S.heading != null ? t('dir') + ' ' + winds[Math.round(S.heading / 45) % 8] : '';
+    DIRTXT = S.heading != null ? t('dir') + ' ' + winds[Math.round(S.heading / 45) % 8] : '';
+    if (!KREUZ_ON) $('dirText').textContent = DIRTXT;
     var badge = $('ref');
     if (res && res.onMotorway && res.ref) { badge.textContent = res.ref; badge.classList.remove('off'); }
     else { badge.textContent = DEMO ? t('demoTag') : '–'; badge.classList.add('off'); }
@@ -512,7 +547,7 @@
       else setNeedle(j + 1, false);
     }
     // Kreuz-Hinweis steht in der Kopfzeile statt der Himmelsrichtung
-    if (gh.length && res.kreuz) $('dirText').textContent = fmtKm(res.kreuz.dist) + ' km · ' + (res.kreuz.name || t('kreuz'));
+    if (gh.length && res.kreuz) setKreuz(res.kreuz); else clearKreuz();
     var showWarn = !!(res.main && res.main.cond);
     warn.classList.toggle('idle', !showWarn);
     $('warnText').textContent = t('warn');

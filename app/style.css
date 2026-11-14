@@ -81,7 +81,12 @@ body { -webkit-user-select: none; user-select: none; }
 .road { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; margin-right: 10px; }
 .badge { background: #1f5fae; color: #fff; font-weight: 800; font-size: 16px; padding: 5px 10px; border-radius: 7px; box-shadow: 3px 3px 8px #060607, -2px -2px 6px #212327; }
 .badge.off { background: #24262a; color: var(--txt2); }
-#dirText { font-size: 16px; font-weight: 700; color: #c4c8ce; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#dirText { font-size: 16px; font-weight: 700; color: #c4c8ce; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+/* Kreuz: zwei Zeilen – oben klein „AK in 3,9 km“, darunter der Name */
+#dirText.two { display: flex; flex-direction: column; justify-content: center; line-height: 1.15; }
+#dirText .dt-sub { font-size: 12px; font-weight: 800; letter-spacing: .4px; color: var(--orange, #ff6b1f); }
+#dirText .dt-main { font-size: 16px; font-weight: 700; color: #e4e6ea; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#dirText.small .dt-main { font-size: 14px; }
 .gps { display: flex; align-items: center; gap: 6px; padding: 7px 13px; border-radius: 999px; font-size: 13px; font-weight: 700; color: var(--txt2); }
 .dot { width: 7px; height: 7px; border-radius: 50%; background: #d9342b; box-shadow: 0 0 6px #d9342b; }
 .dot.ok { background: #4ade80; box-shadow: 0 0 6px #4ade80; }
